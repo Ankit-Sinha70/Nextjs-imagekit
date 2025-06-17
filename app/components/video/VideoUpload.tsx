@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useNotification } from './Notification';
+import { useNotification } from '../Notification';
 
 export default function VideoUpload() {
   const [isUploading, setIsUploading] = useState(false);

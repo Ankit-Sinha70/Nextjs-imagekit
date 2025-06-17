@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useNotification } from './Notification';
-import ConfirmationModal from './ConfirmationModal';
+import { useNotification } from '../Notification';
+import ConfirmationModal from '../models/ConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Video {

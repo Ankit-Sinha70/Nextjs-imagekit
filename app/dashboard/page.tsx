@@ -2,8 +2,8 @@
 import { motion } from 'framer-motion';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
 import DashboardSection from '../components/dashboard/DashboardSection';
-import VideoUpload from '../components/VideoUpload';
-import VideoList from '../components/VideoList';
+import VideoUpload from '../components/video/VideoUpload';
+import VideoList from '../components/video/VideoList';
 
 export default function Dashboard() {
   return (

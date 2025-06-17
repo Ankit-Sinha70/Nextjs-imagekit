@@ -11,7 +11,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-100 to-gray-300">
+    <div className="flex h-screen bg-gradient-to-br from-gray-100 to-gray-400">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useNotification } from '../Notification';
-import LogoutConfirmationModal from '../LogoutConfirmationModal';
+import LogoutConfirmationModal from '../models/LogoutConfirmationModal';
 
 export default function DashboardNav() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);

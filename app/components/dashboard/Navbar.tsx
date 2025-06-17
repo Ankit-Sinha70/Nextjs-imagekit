@@ -5,7 +5,7 @@ import { BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotification } from '../Notification';
-import LogoutConfirmationModal from '../LogoutConfirmationModal';
+import LogoutConfirmationModal from '../models/LogoutConfirmationModal';
 
 export default function Navbar() {
 
@@ -41,7 +41,7 @@ export default function Navbar() {
       transition={{ duration: 0.5 }}
       className="bg-white shadow-sm"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl">
         <div className="flex justify-between h-16">
           <motion.div
             whileHover={{ scale: 1.05 }}
