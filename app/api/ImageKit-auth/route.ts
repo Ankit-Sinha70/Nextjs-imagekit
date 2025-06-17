@@ -14,7 +14,7 @@ export async function GET() {
           });
     } catch (error) {
         return Response.json({
-           error:"Authentication for imagekit failed"
+           error:`Authentication for imagekit failed,${error}`
           }, {status:500});
     }
 }

@@ -1,7 +1,6 @@
 import User from "@/models/User";
 import { connectToDatabase } from "../../../../lib/db";
 import { NextResponse, NextRequest } from "next/server";
-import { log } from "node:console";
 
 export async function POST(request: NextRequest) {
   try {

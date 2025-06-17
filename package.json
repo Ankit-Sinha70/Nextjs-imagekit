@@ -10,9 +10,12 @@
   },
   "dependencies": {
     "@imagekit/next": "^2.1.2",
+    "@tanstack/react-query": "^5.80.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/mongoose": "^5.11.96",
     "bcryptjs": "^3.0.2",
+    "imagekitio-react": "^4.3.0",
+    "lucide-react": "^0.515.0",
     "mongoose": "^8.15.2",
     "next": "15.3.3",
     "next-auth": "^4.24.11",
