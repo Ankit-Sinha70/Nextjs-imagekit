@@ -1,6 +1,6 @@
 "use client"
 import { useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useDebounce } from '@/hooks/useDebounce'
 import Link from 'next/link'
@@ -54,6 +54,18 @@ const RegisterPage = () => {
 
         registerMutation.mutate({ email, password })
     }
+
+    useEffect(() => {
+        if (debouncedEmail) {
+            // Add your email validation logic here
+        }
+    }, [debouncedEmail])
+
+    useEffect(() => {
+        if (debouncedPassword) {
+            // Add your password validation logic here
+        }
+    }, [debouncedPassword])
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">

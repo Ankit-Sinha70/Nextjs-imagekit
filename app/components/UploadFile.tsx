@@ -4,23 +4,28 @@ import {
 } from "@imagekit/next";
 import { useState } from "react";
 interface uploadFileProps {
-  onSuccess: (res: any) => void;
+  onSuccess: (res: { url: string; name: string }) => void;
   onProgress?: (progress: number) => void;
   filetype?: "image" | "video";
 }
 
+interface FileError {
+  message: string;
+  // Add other error properties as needed
+}
+
 const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FileError | null>(null);
 
   const validateFile = (file: File) => {
     if (filetype === "video") {
       if (!file.type.startsWith("video/")) {
-        setError("Please upload a valid video file");
+        setError({ message: `Please upload a valid video file ${error} `});
       }
     }
     if (file.size > 100 * 1024 * 1024) {
-      setError("The file size must be less then 100 MB");
+      setError({ message: "The file size must be less then 100 MB" });
     }
     return true;
   };
@@ -42,16 +47,24 @@ const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
         signature: authRes.signature,
         expire: authRes.expire,
         token: authRes.token,
-        onProgress: (event: any) => {
+        onProgress: (event) => {
           if (event.lengthComputable && onProgress) {
             const percent = (event.loaded / event.total) * 100;
             onProgress(Math.round(percent));
           }
         },
       });
-      onSuccess(res);
+      const uploadResult = await res;
+      if (!uploadResult.url || !uploadResult.name) {
+        throw new Error("Upload failed: Missing URL or name in response");
+      }
+      onSuccess({
+        url: uploadResult.url,
+        name: uploadResult.name
+      });
     } catch (error) {
-      console.error("Uplaod failed", error);
+      console.error("Upload failed", error);
+      setError({ message: error instanceof Error ? error.message : "Upload failed" });
     } finally {
       setUploading(false);
     }

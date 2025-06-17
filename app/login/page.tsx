@@ -56,7 +56,7 @@ const LoginPage = () => {
               Welcome back
             </h2>
             <p className="mt-3 text-center text-sm text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/register"
                 className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
