@@ -9,21 +9,27 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@imagekit/next": "^2.1.2",
     "@tanstack/react-query": "^5.80.7",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.96",
     "bcryptjs": "^3.0.2",
+    "framer-motion": "^12.18.1",
     "imagekitio-react": "^4.3.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.515.0",
     "mongoose": "^8.15.2",
     "next": "15.3.3",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@locator/babel-jsx": "^0.4.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

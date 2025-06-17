@@ -1,41 +1,54 @@
 import mongoose from "mongoose";
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your Mongo URI to .env.local');
+}
 
-type MongooseCache = {
+const uri = process.env.MONGODB_URI;
+
+interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
-};
+}
 
-// @ts-expect-error - global mongoose type
-const cached: MongooseCache = global.mongoose || {
-  conn: null,
-  promise: null,
-};
+let cached: MongooseCache = (global as any).mongoose || { conn: null, promise: null };
 
-// @ts-expect-error - global mongoose type
-global.mongoose = cached;
-
-const MONGODB_URI = process.env.MONGODB_URI!;
-console.log(MONGODB_URI,"llll")
-if (!MONGODB_URI) {
-  throw new Error("Please define mongo_uri in env variables");
+if (!(global as any).mongoose) {
+  (global as any).mongoose = cached;
 }
 
 export async function connectToDatabase() {
   if (cached.conn) {
     return cached.conn;
   }
+
   if (!cached.promise) {
     const opts = {
-      bufferCommands: true,
-      maxPoolSize: 10,
+      bufferCommands: false,
     };
-    cached.promise = mongoose.connect(MONGODB_URI, opts);
+
+    cached.promise = mongoose.connect(uri, opts).then((mongoose) => {
+      return mongoose;
+    });
   }
+
   try {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
     throw e;
   }
+
   return cached.conn;
+}
+
+// Define User Schema if not already defined
+if (!mongoose.models.User) {
+  const userSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    name: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now },
+  });
+
+  mongoose.models.User = mongoose.model('User', userSchema);
 }

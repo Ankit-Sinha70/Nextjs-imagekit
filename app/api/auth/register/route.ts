@@ -1,10 +1,11 @@
+import { connectToDatabase } from "@/lib/db";
 import User from "@/models/User";
-import { connectToDatabase } from "../../../../lib/db";
-import { NextResponse, NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
+
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     await connectToDatabase();
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
@@ -25,12 +27,13 @@ export async function POST(request: NextRequest) {
       email,
       password,
     });
+
     return NextResponse.json(
       { message: "User registered successfully" },
-      { status: 200 }
+      { status: 400 }
     );
   } catch (error) {
-    console.log("Registration error", error);
+    console.error("Registration error", error);
     return NextResponse.json(
       { error: "Failed to register user" },
       { status: 400 }

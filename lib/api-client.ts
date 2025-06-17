@@ -1,20 +1,12 @@
 import { Ivideo } from "@/models/Video";
 
-
 export type VideoFormData = Omit<Ivideo, "_id">;
 
 type FetchOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE";
-  body?: unknown;
+  body?: any;
   headers?: Record<string, string>;
 };
-
-// Define proper types for your API responses
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  status: number;
-}
 
 class ApiClient {
   private async fetch<T>(
@@ -54,25 +46,3 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient();
-
-// Then use it in your functions
-export async function apiRequest<T>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<ApiResponse<T>> {
-  try {
-    const response = await fetch(`/api${endpoint}`, options);
-    const data = await response.json();
-    
-    return {
-      data: data,
-      status: response.status,
-      error: !response.ok ? data.error : undefined
-    };
-  } catch (error) {
-    return {
-      status: 500,
-      error: error instanceof Error ? error.message : 'An unknown error occurred'
-    };
-  }
-}
