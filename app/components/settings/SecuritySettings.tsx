@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Shield, Key, Smartphone, Eye, EyeOff } from 'lucide-react';
 import { useNotification } from '../Notification';
@@ -22,9 +22,32 @@ export default function SecuritySettings() {
     confirm: ''
   });
 
+  const [isLoadingPassword, setIsLoadingPassword] = useState(false);
+  const [isLoadingTwoFactor, setIsLoadingTwoFactor] = useState(false);
+  const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+
   const { showNotification } = useNotification();
 
-  const handlePasswordChange = () => {
+  useEffect(() => {
+    const fetchSecuritySettings = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setTwoFactorEnabled(data.twoFactorEnabled || false);
+      } catch (error: any) {
+        console.error("Failed to fetch initial security settings:", error);
+        showNotification('Failed to load security settings.', 'error');
+      } finally {
+        setIsLoadingInitial(false);
+      }
+    };
+    fetchSecuritySettings();
+  }, []);
+
+  const handlePasswordChange = async () => {
     if (passwords.new !== passwords.confirm) {
       showNotification('New passwords do not match', 'error');
       return;
@@ -34,22 +57,76 @@ export default function SecuritySettings() {
       return;
     }
     
-    setPasswords({ current: '', new: '', confirm: '' });
-    showNotification('Password updated successfully!', 'success');
+    setIsLoadingPassword(true);
+    try {
+      const response = await fetch('/api/security/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: passwords.current,
+          newPassword: passwords.new,
+          confirmPassword: passwords.confirm,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update password');
+      }
+      
+      setPasswords({ current: '', new: '', confirm: '' });
+      showNotification(data.message, 'success');
+    } catch (error: any) {
+      console.error("Password update error:", error);
+      showNotification(error.message, 'error');
+    } finally {
+      setIsLoadingPassword(false);
+    }
   };
 
-  const handleTwoFactorToggle = () => {
-    setTwoFactorEnabled(!twoFactorEnabled);
-    showNotification(
-      twoFactorEnabled ? 'Two-factor authentication disabled' : 'Two-factor authentication enabled',
-      'success'
-    );
+  const handleTwoFactorToggle = async () => {
+    setIsLoadingTwoFactor(true);
+    const newStatus = !twoFactorEnabled;
+    try {
+      const response = await fetch('/api/security/two-factor', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ enabled: newStatus }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to toggle two-factor authentication');
+      }
+
+      setTwoFactorEnabled(data.twoFactorEnabled);
+      showNotification(data.message, 'success');
+    } catch (error: any) {
+      console.error("2FA toggle error:", error);
+      showNotification(error.message, 'error');
+    } finally {
+      setIsLoadingTwoFactor(false);
+    }
   };
 
   const handleRevokeSession = (sessionId: number) => {
     setActiveSessions(activeSessions.filter(session => session.id !== sessionId));
     showNotification('Session revoked successfully', 'success');
   };
+
+  if (isLoadingInitial) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
+        Loading security settings...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,10 +150,12 @@ export default function SecuritySettings() {
                 onChange={(e) => setPasswords({...passwords, current: e.target.value})}
                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter current password"
+                disabled={isLoadingPassword}
               />
               <button
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                disabled={isLoadingPassword}
               >
                 {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -95,10 +174,12 @@ export default function SecuritySettings() {
                 onChange={(e) => setPasswords({...passwords, new: e.target.value})}
                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter new password"
+                disabled={isLoadingPassword}
               />
               <button
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                disabled={isLoadingPassword}
               >
                 {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -117,10 +198,12 @@ export default function SecuritySettings() {
                 onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
                 className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Confirm new password"
+                disabled={isLoadingPassword}
               />
               <button
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                disabled={isLoadingPassword}
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -130,9 +213,10 @@ export default function SecuritySettings() {
           <div className="flex items-end">
             <button
               onClick={handlePasswordChange}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoadingPassword}
             >
-              Update Password
+              {isLoadingPassword ? 'Updating...' : 'Update Password'}
             </button>
           </div>
         </div>
@@ -150,13 +234,14 @@ export default function SecuritySettings() {
           </div>
           <button
             onClick={handleTwoFactorToggle}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               twoFactorEnabled 
                 ? 'bg-red-600 text-white hover:bg-red-700' 
                 : 'bg-green-600 text-white hover:bg-green-700'
             }`}
+            disabled={isLoadingTwoFactor}
           >
-            {twoFactorEnabled ? 'Disable' : 'Enable'}
+            {isLoadingTwoFactor ? 'Updating...' : (twoFactorEnabled ? 'Disable' : 'Enable')}
           </button>
         </div>
         

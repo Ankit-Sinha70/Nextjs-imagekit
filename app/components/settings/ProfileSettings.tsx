@@ -1,33 +1,95 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, MapPin, Camera } from 'lucide-react';
 import { useNotification } from '../Notification';
 
 export default function ProfileSettings() {
   const [profile, setProfile] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    location: 'New York, NY',
-    bio: 'Full-stack developer passionate about creating amazing user experiences.',
-    avatar: '/api/placeholder/150/150'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    location: '',
+    bio: '',
+    avatar: ''
   });
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { showNotification } = useNotification();
 
-  const handleSave = () => {
-    setIsEditing(false);
-    showNotification('Profile updated successfully!', 'success');
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setProfile(data);
+      } catch (e: any) {
+        setError('Failed to load profile: ' + e.message);
+        showNotification('Failed to load profile!', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profile),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
+      }
+
+      const result = await response.json();
+      setProfile(result.profile);
+      setIsEditing(false);
+      showNotification('Profile updated successfully!', 'success');
+    } catch (e: any) {
+      setError('Failed to save profile: ' + e.message);
+      showNotification('Failed to save profile!', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     showNotification('Changes discarded', 'info');
   };
+
+  if (isLoading && profile.firstName === '') {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
+        Loading profile...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-red-500">
+        Error: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -44,13 +106,15 @@ export default function ProfileSettings() {
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              disabled={isLoading}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {isLoading ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              disabled={isLoading}
+              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -63,9 +127,14 @@ export default function ProfileSettings() {
         <div className="lg:col-span-1">
           <div className="flex flex-col items-center">
             <div className="relative">
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold mb-4">
-                {profile.firstName.charAt(0)}{profile.lastName.charAt(0)}
-              </div>
+              {profile.avatar ? (
+                <img src={profile.avatar} alt="Profile Avatar" className="w-32 h-32 rounded-full object-cover mb-4" />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold mb-4">
+                  {profile.firstName.charAt(0)}{profile.lastName.charAt(0)}
+                </div>
+              )}
+              
               {isEditing && (
                 <button className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50">
                   <Camera className="w-4 h-4 text-gray-600" />

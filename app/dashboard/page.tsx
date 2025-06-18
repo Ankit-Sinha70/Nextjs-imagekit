@@ -8,8 +8,8 @@ import VideoList from '../components/video/VideoList';
 export default function Dashboard() {
   return (
     <DashboardLayout>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main className="max-w-7xl mx-auto">
+        <div className="sm:px-0">
           <DashboardSection title="Upload Video">
             <VideoUpload />
           </DashboardSection>

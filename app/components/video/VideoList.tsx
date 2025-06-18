@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNotification } from '../Notification';
 import ConfirmationModal from '../models/ConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from "@/components/ui/button"
 
 interface Video {
   id: string;
@@ -91,14 +92,12 @@ export default function VideoList() {
                 <p className="text-sm text-gray-500">
                   {new Date(video.createdAt).toLocaleDateString()}
                 </p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <Button
                   onClick={() => handleDeleteClick(video)}
-                  className="mt-2 text-red-500 hover:text-red-700 text-sm font-medium"
+                  className="mt-2 rounded-lg text-white hover:text-gray-100 text-sm font-medium"
                 >
                   Delete
-                </motion.button>
+                </Button>
               </div>
             </motion.div>
           ))}

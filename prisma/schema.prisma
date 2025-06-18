@@ -1,0 +1,22 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id        Int     @id @default(autoincrement()) // Auto-incrementing ID for the profile
+  firstName String
+  lastName  String
+  email     String  @unique // Email is unique for each profile
+  phone     String? // '?' makes the field optional
+  location  String?
+  bio       String?
+  avatar    String?
+} 

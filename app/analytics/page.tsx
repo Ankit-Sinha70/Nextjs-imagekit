@@ -82,8 +82,8 @@ export default function Analytics() {
 
   return (
     <DashboardLayout>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
+      <main className="max-w-7xl mx-auto">
+        <div className=" sm:px-0">
           <DashboardSection title="Analytics Overview">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
