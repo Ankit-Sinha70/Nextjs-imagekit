@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, MapPin, Camera } from 'lucide-react';
 import { useNotification } from '../Notification';
@@ -20,6 +20,8 @@ export default function ProfileSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { showNotification } = useNotification();
+  const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -41,16 +43,37 @@ export default function ProfileSettings() {
     fetchProfile();
   }, []);
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewAvatarFile(file);
+      setProfile((prevProfile) => ({
+        ...prevProfile,
+        avatar: URL.createObjectURL(file),
+      }));
+    }
+  };
+
   const handleSave = async () => {
     setIsLoading(true);
     setError(null);
     try {
+      const formData = new FormData();
+
+      Object.entries(profile).forEach(([key, value]) => {
+        if (key === 'avatar' && newAvatarFile) {
+          return;
+        }
+        formData.append(key, value);
+      });
+
+      if (newAvatarFile) {
+        formData.append('avatarFile', newAvatarFile);
+      }
+
       const response = await fetch('/api/profile', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(profile),
+        body: formData,
       });
 
       if (!response.ok) {
@@ -60,6 +83,7 @@ export default function ProfileSettings() {
 
       const result = await response.json();
       setProfile(result.profile);
+      setNewAvatarFile(null);
       setIsEditing(false);
       showNotification('Profile updated successfully!', 'success');
     } catch (e: any) {
@@ -136,7 +160,10 @@ export default function ProfileSettings() {
               )}
               
               {isEditing && (
-                <button className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50"
+                >
                   <Camera className="w-4 h-4 text-gray-600" />
                 </button>
               )}
@@ -144,6 +171,13 @@ export default function ProfileSettings() {
             <p className="text-sm text-gray-500 text-center">
               {isEditing ? 'Click to change photo' : 'Profile photo'}
             </p>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleAvatarChange}
+            />
           </div>
         </div>
 

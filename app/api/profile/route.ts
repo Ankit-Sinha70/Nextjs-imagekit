@@ -1,6 +1,74 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '../../../lib/db'; // Corrected import path and function name
 import Profile, { IProfile } from '../../../models/Profile'; // Adjust path if your project structure differs
+import formidable, { Fields, Files, Part } from 'formidable';
+import fs from 'fs/promises';
+import path from 'path';
+import { IncomingMessage } from 'http';
+import { Readable } from 'stream';
+
+// Define the shape of the profile data (adjust as per your actual data model)
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio: string;
+  avatar: string;
+}
+
+// In a real application, this would be stored in a database.
+// For this example, we'll use a simple in-memory mock.
+let userProfile: UserProfile = {
+  firstName: 'John',
+  lastName: 'Doe',
+  email: 'john.doe@example.com',
+  phone: '123-456-7890',
+  location: 'New York, USA',
+  bio: 'A passionate developer.',
+  avatar: '/uploads/default_avatar.png', // Example default avatar
+};
+
+// Directory to save uploaded files (relative to the project root)
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
+
+// Ensure the upload directory exists
+const ensureUploadDir = async () => {
+  try {
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  } catch (error) {
+    console.error('Failed to create upload directory:', error);
+  }
+};
+
+// Important: Next.js needs to know not to parse the body itself
+// when you are handling multipart/form-data with a library like formidable.
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+// Helper function to convert Next.js Request to a Node.js IncomingMessage-like object
+// This is necessary because formidable expects a Node.js IncomingMessage,
+// but Next.js App Router provides a Web API Request object.
+async function streamIncomingMessage(req: Request): Promise<IncomingMessage> {
+  // Get the entire body as a buffer
+  const bodyBuffer = await req.arrayBuffer(); 
+  const readable = new Readable();
+  readable.push(Buffer.from(bodyBuffer));
+  readable.push(null); // Mark the end of the stream
+
+  // Create a mock IncomingMessage object by merging the Readable stream with Request headers
+  const incomingMessage = Object.assign(readable, {
+    headers: Object.fromEntries(req.headers.entries()), // Convert Headers object to plain object
+    method: req.method,
+    url: req.url,
+  }) as IncomingMessage; // Cast to IncomingMessage
+
+  return incomingMessage;
+}
 
 // GET /api/profile - Fetches the user profile
 export async function GET() {
@@ -35,51 +103,61 @@ export async function GET() {
 }
 
 // PUT /api/profile - Updates the user profile
-export async function PUT(request: Request) {
-  await connectToDatabase(); // Connect to MongoDB
+export async function PUT(req: Request) {
+  await connectToDatabase();
+  await ensureUploadDir();
 
-  try {
-    const updatedData = await request.json(); // Data from the frontend
+  const form = formidable({
+    uploadDir: UPLOAD_DIR,
+    keepExtensions: true, // Keep original file extensions
+    maxFileSize: 5 * 1024 * 1024, // Max 5MB file size
+    filename: (name: string, ext: string, part: Part) => {
+      // Generate a unique filename for the uploaded file
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      // Use the original field name (e.g., 'avatarFile') for clarity, though it's not strictly necessary.
+      return `${part.name}-${uniqueSuffix}${ext}`;
+    },
+  });
 
-    // Try to find the existing profile
-    let profileToUpdate: IProfile | null = await Profile.findOne({});
+  // Convert Next.js Request to an IncomingMessage-like object for formidable
+  const mockReq = await streamIncomingMessage(req);
 
-    let updatedProfileResult: IProfile | null;
-
-    if (!profileToUpdate) {
-      // If no profile exists, create one (this handles initial save if DB is empty)
-      console.log("No existing profile found, creating a new one on PUT.");
-      updatedProfileResult = await Profile.create({
-        firstName: updatedData.firstName || 'New',
-        lastName: updatedData.lastName || 'User',
-        email: updatedData.email || `temp-user-${Date.now()}@example.com`,
-        phone: updatedData.phone || null,
-        location: updatedData.location || null,
-        bio: updatedData.bio || null,
-        avatar: updatedData.avatar || null,
-      });
-    } else {
-      // Update the existing profile in MongoDB
-      updatedProfileResult = await Profile.findOneAndUpdate(
-        { _id: profileToUpdate._id }, // Find by the existing profile's ID
-        updatedData,                 // The data sent from the frontend
-        { new: true, runValidators: true } // Return the updated document and run schema validators
-      );
-
-      if (!updatedProfileResult) {
-        return NextResponse.json({ message: 'Profile not found after initial check.' }, { status: 404 });
+  return new Promise((resolve, reject) => {
+    form.parse(mockReq, async (err: any, fields: Fields, files: Files) => {
+      if (err) {
+        console.error('Error parsing form data:', err);
+        return resolve(NextResponse.json({ message: 'Error processing request', error: err.message }, { status: 400 }));
       }
-      console.log("Successfully updated profile:", updatedProfileResult);
-    }
 
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+      // Process textual fields
+      const updatedFields: Partial<UserProfile> = {};
+      for (const key in fields) {
+        // Formidable returns fields as arrays of strings. Take the first element.
+        if (Array.isArray(fields[key]) && fields[key].length > 0) {
+          updatedFields[key as keyof UserProfile] = String(fields[key][0]);
+        }
+      }
 
-    return NextResponse.json({ message: 'Profile updated successfully', profile: updatedProfileResult });
-  } catch (error: any) {
-    console.error("Error updating profile:", error);
-    if (error.code === 11000) {
-      return NextResponse.json({ message: 'The email address provided is already in use.' }, { status: 409 });
-    }
-    return NextResponse.json({ message: 'Failed to update profile' }, { status: 500 });
-  }
+      // Process file upload (if 'avatarFile' was sent)
+      let avatarUrl = userProfile.avatar; // Keep current avatar if no new file is uploaded
+      if (files.avatarFile && files.avatarFile.length > 0) {
+        const uploadedFile = files.avatarFile[0];
+        // The file is already saved to UPLOAD_DIR by formidable.
+        // Construct the public URL for the avatar.
+        avatarUrl = `/uploads/${path.basename(uploadedFile.filepath)}`;
+      }
+
+      // Update the mock user profile with new data and avatar URL
+      userProfile = {
+        ...userProfile,
+        ...updatedFields,
+        avatar: avatarUrl,
+      };
+
+      // In a real application, you would save `userProfile` to your database here.
+      // e.g., await db.updateUser(userProfile.id, userProfile);
+
+      resolve(NextResponse.json({ message: 'Profile updated successfully!', profile: userProfile }));
+    });
+  });
 } 

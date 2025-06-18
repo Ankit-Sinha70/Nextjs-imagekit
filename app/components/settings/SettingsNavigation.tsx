@@ -32,7 +32,7 @@ export default function SettingsNavigation({ sections, activeSection, onSectionC
   };
 
   return (
-    <div className="sticky top-4 z-10 mb-8">
+    <div className="top-4 z-10 mb-8">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900">Settings</h2>

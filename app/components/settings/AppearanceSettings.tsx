@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Palette, Moon, Sun, Monitor, Eye, EyeOff } from 'lucide-react';
-import { useNotification } from '../Notification';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Palette, Moon, Sun, Monitor, Eye, EyeOff } from "lucide-react";
+import { useNotification } from "../Notification";
 
 interface ThemeOption {
   id: string;
@@ -13,78 +13,139 @@ interface ThemeOption {
   preview: string;
 }
 
-export default function AppearanceSettings() {
-  const [theme, setTheme] = useState('light');
-  const [fontSize, setFontSize] = useState('medium');
-  const [compactMode, setCompactMode] = useState(false);
-  const [showAnimations, setShowAnimations] = useState(true);
-  const [accentColor, setAccentColor] = useState('blue');
+interface AppearanceSettingsState {
+  theme: "light" | "dark" | "auto";
+  fontSize: "small" | "medium" | "large";
+  compactMode: boolean;
+  showAnimations: boolean;
+  accentColor: string;
+}
 
+export default function AppearanceSettings() {
+  const [settings, setSettings] = useState<AppearanceSettingsState>({
+    theme: "light",
+    fontSize: "medium",
+    compactMode: false,
+    showAnimations: true,
+    accentColor: "blue",
+  });
+  const [isLoading, setIsLoading] = useState(true);
   const { showNotification } = useNotification();
 
   const themeOptions: ThemeOption[] = [
     {
-      id: 'light',
-      name: 'Light',
-      description: 'Clean and bright interface',
+      id: "light",
+      name: "Light",
+      description: "Clean and bright interface",
       icon: Sun,
-      preview: 'bg-white border-gray-200'
+      preview: "bg-white border-gray-200",
     },
     {
-      id: 'dark',
-      name: 'Dark',
-      description: 'Easy on the eyes in low light',
+      id: "dark",
+      name: "Dark",
+      description: "Easy on the eyes in low light",
       icon: Moon,
-      preview: 'bg-gray-900 border-gray-700'
+      preview: "bg-gray-900 border-gray-700",
     },
     {
-      id: 'auto',
-      name: 'Auto',
-      description: 'Follows your system preference',
+      id: "auto",
+      name: "Auto",
+      description: "Follows your system preference",
       icon: Monitor,
-      preview: 'bg-gradient-to-r from-white to-gray-100 border-gray-300'
-    }
+      preview: "bg-gradient-to-r from-white to-gray-100 border-gray-300",
+    },
   ];
 
   const accentColors = [
-    { id: 'blue', name: 'Blue', class: 'bg-blue-500' },
-    { id: 'green', name: 'Green', class: 'bg-green-500' },
-    { id: 'purple', name: 'Purple', class: 'bg-purple-500' },
-    { id: 'red', name: 'Red', class: 'bg-red-500' },
-    { id: 'orange', name: 'Orange', class: 'bg-orange-500' },
-    { id: 'pink', name: 'Pink', class: 'bg-pink-500' }
+    { id: "blue", name: "Blue", class: "bg-blue-500" },
+    { id: "green", name: "Green", class: "bg-green-500" },
+    { id: "purple", name: "Purple", class: "bg-purple-500" },
+    { id: "red", name: "Red", class: "bg-red-500" },
+    { id: "orange", name: "Orange", class: "bg-orange-500" },
+    { id: "pink", name: "Pink", class: "bg-pink-500" },
   ];
 
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme);
-    showNotification(`Theme changed to ${newTheme}`, 'success');
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch("/api/appearance");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: AppearanceSettingsState = await response.json();
+        setSettings(data);
+      } catch (error: any) {
+        console.error("Failed to fetch appearance settings:", error);
+        showNotification("Failed to load appearance settings.", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const sendUpdateToApi = async (newSettings: AppearanceSettingsState) => {
+    try {
+      const response = await fetch("/api/appearance", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newSettings),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update appearance settings");
+      }
+      showNotification(data.message, "success");
+    } catch (error: any) {
+      console.error("Appearance update error:", error);
+      showNotification(error.message, "error");
+    }
   };
 
-  const handleFontSizeChange = (size: string) => {
-    setFontSize(size);
-    showNotification(`Font size changed to ${size}`, 'success');
+  const handleThemeChange = (newTheme: "light" | "dark" | "auto") => {
+    const updatedSettings = { ...settings, theme: newTheme };
+    setSettings(updatedSettings);
+    sendUpdateToApi(updatedSettings);
+  };
+
+  const handleFontSizeChange = (size: "small" | "medium" | "large") => {
+    const updatedSettings = { ...settings, fontSize: size };
+    setSettings(updatedSettings);
+    sendUpdateToApi(updatedSettings);
   };
 
   const handleCompactModeToggle = () => {
-    setCompactMode(!compactMode);
-    showNotification(
-      compactMode ? 'Compact mode disabled' : 'Compact mode enabled',
-      'success'
-    );
+    const updatedSettings = { ...settings, compactMode: !settings.compactMode };
+    setSettings(updatedSettings);
+    sendUpdateToApi(updatedSettings);
   };
 
   const handleAnimationsToggle = () => {
-    setShowAnimations(!showAnimations);
-    showNotification(
-      showAnimations ? 'Animations disabled' : 'Animations enabled',
-      'success'
-    );
+    const updatedSettings = {
+      ...settings,
+      showAnimations: !settings.showAnimations,
+    };
+    setSettings(updatedSettings);
+    sendUpdateToApi(updatedSettings);
   };
 
   const handleAccentColorChange = (color: string) => {
-    setAccentColor(color);
-    showNotification(`Accent color changed to ${color}`, 'success');
+    const updatedSettings = { ...settings, accentColor: color };
+    setSettings(updatedSettings);
+    sendUpdateToApi(updatedSettings);
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
+        Loading appearance settings...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -94,27 +155,33 @@ export default function AppearanceSettings() {
           <Palette className="w-6 h-6 text-purple-600 mr-3" />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Theme</h3>
-            <p className="text-sm text-gray-500">Choose your preferred appearance</p>
+            <p className="text-sm text-gray-500">
+              Choose your preferred appearance
+            </p>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {themeOptions.map((option) => (
             <div
               key={option.id}
-              onClick={() => handleThemeChange(option.id)}
+              onClick={() =>
+                handleThemeChange(option.id as "light" | "dark" | "auto")
+              }
               className={`relative cursor-pointer border-2 rounded-lg p-4 transition-all ${
-                theme === option.id 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
+                settings.theme === option.id
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
-              <div className={`w-full h-20 rounded ${option.preview} mb-3 flex items-center justify-center`}>
+              <div
+                className={`w-full h-20 rounded ${option.preview} mb-3 flex items-center justify-center`}
+              >
                 <option.icon className="w-6 h-6 text-gray-600" />
               </div>
               <h4 className="font-medium text-gray-900">{option.name}</h4>
               <p className="text-sm text-gray-500">{option.description}</p>
-              {theme === option.id && (
+              {settings.theme === option.id && (
                 <div className="absolute top-2 right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
@@ -135,9 +202,19 @@ export default function AppearanceSettings() {
               min="0"
               max="2"
               step="1"
-              value={fontSize === 'small' ? 0 : fontSize === 'medium' ? 1 : 2}
+              value={
+                settings.fontSize === "small"
+                  ? 0
+                  : settings.fontSize === "medium"
+                  ? 1
+                  : 2
+              }
               onChange={(e) => {
-                const sizes = ['small', 'medium', 'large'];
+                const sizes: ("small" | "medium" | "large")[] = [
+                  "small",
+                  "medium",
+                  "large",
+                ];
                 handleFontSizeChange(sizes[parseInt(e.target.value)]);
               }}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
@@ -147,28 +224,34 @@ export default function AppearanceSettings() {
         </div>
         <div className="mt-2 text-center">
           <span className="text-sm font-medium text-gray-700">
-            Current: {fontSize.charAt(0).toUpperCase() + fontSize.slice(1)}
+            Current:{" "}
+            {settings.fontSize.charAt(0).toUpperCase() +
+              settings.fontSize.slice(1)}
           </span>
         </div>
       </div>
 
       {/* Accent Color */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">Accent Color</h4>
+        <h4 className="text-md font-semibold text-gray-900 mb-4">
+          Accent Color
+        </h4>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
           {accentColors.map((color) => (
             <button
               key={color.id}
               onClick={() => handleAccentColorChange(color.id)}
               className={`relative p-4 rounded-lg border-2 transition-all ${
-                accentColor === color.id 
-                  ? 'border-gray-900 scale-110' 
-                  : 'border-gray-200 hover:border-gray-300'
+                settings.accentColor === color.id
+                  ? "border-gray-900 scale-110"
+                  : "border-gray-200 hover:border-gray-300"
               }`}
             >
               <div className={`w-full h-8 rounded ${color.class}`}></div>
-              <span className="text-xs text-gray-600 mt-1 block">{color.name}</span>
-              {accentColor === color.id && (
+              <span className="text-xs text-gray-600 mt-1 block">
+                {color.name}
+              </span>
+              {settings.accentColor === color.id && (
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
@@ -180,17 +263,23 @@ export default function AppearanceSettings() {
 
       {/* Display Options */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">Display Options</h4>
+        <h4 className="text-md font-semibold text-gray-900 mb-4">
+          Display Options
+        </h4>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h5 className="text-sm font-medium text-gray-900">Compact Mode</h5>
-              <p className="text-sm text-gray-500">Reduce spacing for more content</p>
+              <h5 className="text-sm font-medium text-gray-900">
+                Compact Mode
+              </h5>
+              <p className="text-sm text-gray-500">
+                Reduce spacing for more content
+              </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={compactMode}
+                checked={settings.compactMode}
                 onChange={handleCompactModeToggle}
                 className="sr-only peer"
               />
@@ -200,13 +289,17 @@ export default function AppearanceSettings() {
 
           <div className="flex items-center justify-between">
             <div>
-              <h5 className="text-sm font-medium text-gray-900">Show Animations</h5>
-              <p className="text-sm text-gray-500">Enable smooth transitions and effects</p>
+              <h5 className="text-sm font-medium text-gray-900">
+                Show Animations
+              </h5>
+              <p className="text-sm text-gray-500">
+                Enable smooth transitions and effects
+              </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                checked={showAnimations}
+                checked={settings.showAnimations}
                 onChange={handleAnimationsToggle}
                 className="sr-only peer"
               />
@@ -219,25 +312,36 @@ export default function AppearanceSettings() {
       {/* Preview */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h4 className="text-md font-semibold text-gray-900 mb-4">Preview</h4>
-        <div className={`p-4 rounded-lg border ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
+        <div
+          className={`p-4 rounded-lg border ${
+            settings.theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-50"
+          } {{ new_font_size_class }}`}
+        >
           <div className="flex items-center justify-between mb-3">
             <h5 className="font-medium">Sample Card</h5>
-            <button className={`px-3 py-1 rounded text-white text-sm ${
-              accentColor === 'blue' ? 'bg-blue-500' :
-              accentColor === 'green' ? 'bg-green-500' :
-              accentColor === 'purple' ? 'bg-purple-500' :
-              accentColor === 'red' ? 'bg-red-500' :
-              accentColor === 'orange' ? 'bg-orange-500' :
-              'bg-pink-500'
-            }`}>
+            <button
+              className={`px-3 py-1 rounded text-white text-sm ${
+                settings.accentColor === "blue"
+                  ? "bg-blue-500"
+                  : settings.accentColor === "green"
+                  ? "bg-green-500"
+                  : settings.accentColor === "purple"
+                  ? "bg-purple-500"
+                  : settings.accentColor === "red"
+                  ? "bg-red-500"
+                  : settings.accentColor === "orange"
+                  ? "bg-orange-500"
+                  : "bg-pink-500"
+              }`}
+            >
               Button
             </button>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-gray-600">
             This is how your interface will look with the current settings.
           </p>
         </div>
       </div>
     </div>
   );
-} 
+}

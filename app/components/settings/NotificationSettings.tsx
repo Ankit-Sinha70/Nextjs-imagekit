@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Mail, MessageSquare, Smartphone, Globe } from 'lucide-react';
 import { useNotification } from '../Notification';
@@ -15,71 +15,126 @@ interface NotificationSetting {
   inApp: boolean;
 }
 
-export default function NotificationSettings() {
-  const [settings, setSettings] = useState<NotificationSetting[]>([
-    {
-      id: 'security',
-      title: 'Security Alerts',
-      description: 'Get notified about login attempts and security updates',
-      email: true,
-      push: true,
-      sms: false,
-      inApp: true
-    },
-    {
-      id: 'updates',
-      title: 'System Updates',
-      description: 'Receive notifications about new features and updates',
-      email: true,
-      push: false,
-      sms: false,
-      inApp: true
-    },
-    {
-      id: 'marketing',
-      title: 'Marketing Communications',
-      description: 'Receive promotional emails and special offers',
-      email: false,
-      push: false,
-      sms: false,
-      inApp: false
-    },
-    {
-      id: 'activity',
-      title: 'Activity Notifications',
-      description: 'Get notified about comments, likes, and other activities',
-      email: true,
-      push: true,
-      sms: false,
-      inApp: true
-    }
-  ]);
+// Helper function to transform API data to frontend state format
+const transformApiDataToFrontend = (apiData: any): NotificationSetting[] => {
+  const defaultSettings: NotificationSetting[] = [
+    { id: 'security', title: 'Security Alerts', description: 'Get notified about login attempts and security updates', email: false, push: false, sms: false, inApp: false },
+    { id: 'updates', title: 'System Updates', description: 'Receive notifications about new features and updates', email: false, push: false, sms: false, inApp: false },
+    { id: 'marketing', title: 'Marketing Communications', description: 'Receive promotional emails and special offers', email: false, push: false, sms: false, inApp: false },
+    { id: 'activity', title: 'Activity Notifications', description: 'Get notified about comments, likes, and other activities', email: false, push: false, sms: false, inApp: false }
+  ];
 
+  if (!apiData) return defaultSettings;
+
+  return defaultSettings.map(defaultSetting => {
+    const apiSetting = apiData[defaultSetting.id];
+    return {
+      ...defaultSetting,
+      email: apiSetting?.email ?? defaultSetting.email,
+      push: apiSetting?.push ?? defaultSetting.push,
+      sms: apiSetting?.sms ?? defaultSetting.sms,
+      inApp: apiSetting?.inApp ?? defaultSetting.inApp,
+    };
+  });
+};
+
+// Helper function to transform frontend state to API data format
+const transformFrontendDataToApi = (frontendData: NotificationSetting[]): { [key: string]: { email: boolean, push: boolean, sms: boolean, inApp: boolean } } => {
+  const apiData: { [key: string]: { email: boolean, push: boolean, sms: boolean, inApp: boolean } } = {};
+  frontendData.forEach(setting => {
+    apiData[setting.id] = {
+      email: setting.email,
+      push: setting.push,
+      sms: setting.sms,
+      inApp: setting.inApp,
+    };
+  });
+  return apiData;
+};
+
+export default function NotificationSettings() {
+  const [settings, setSettings] = useState<NotificationSetting[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { showNotification } = useNotification();
 
+  // Fetch initial notification settings on component mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/notifications');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setSettings(transformApiDataToFrontend(data)); // Transform and set state
+      } catch (error: any) {
+        console.error("Failed to fetch notification settings:", error);
+        showNotification('Failed to load notification settings.', 'error');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const sendUpdateToApi = async (updatedSettings: NotificationSetting[]) => {
+    try {
+      const apiData = transformFrontendDataToApi(updatedSettings); // Transform to API format
+      const response = await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to update notification settings');
+      }
+      showNotification(data.message, 'success');
+      // Optionally re-fetch or ensure state is aligned with backend response if needed
+      // For now, we trust the optimistic update on client side
+    } catch (error: any) {
+      console.error("Notification update error:", error);
+      showNotification(error.message, 'error');
+      // If update fails, you might want to revert the UI state
+      // setSettings(originalSettings); // Requires storing original state
+    }
+  };
+
   const handleToggle = (settingId: string, channel: keyof Omit<NotificationSetting, 'id' | 'title' | 'description'>) => {
-    setSettings(settings.map(setting => 
-      setting.id === settingId 
-        ? { ...setting, [channel]: !setting[channel] }
-        : setting
-    ));
-    showNotification('Notification settings updated', 'success');
+    setSettings(prevSettings => {
+      const newSettings = prevSettings.map(setting => 
+        setting.id === settingId 
+          ? { ...setting, [channel]: !setting[channel] }
+          : setting
+      );
+      sendUpdateToApi(newSettings); // Send update to API immediately
+      return newSettings;
+    });
   };
 
   const handleSaveAll = () => {
+    sendUpdateToApi(settings); // Send all current settings to API
     showNotification('All notification settings saved!', 'success');
   };
 
   const handleReset = () => {
-    setSettings(settings.map(setting => ({
-      ...setting,
-      email: setting.id === 'security' || setting.id === 'updates' || setting.id === 'activity',
-      push: setting.id === 'security' || setting.id === 'activity',
-      sms: false,
-      inApp: setting.id === 'security' || setting.id === 'updates' || setting.id === 'activity'
-    })));
+    const defaultFrontendSettings = transformApiDataToFrontend({}); // Get defaults from our helper
+    setSettings(defaultFrontendSettings);
+    sendUpdateToApi(defaultFrontendSettings); // Send reset state to API
     showNotification('Settings reset to defaults', 'info');
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
+        Loading notification settings...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

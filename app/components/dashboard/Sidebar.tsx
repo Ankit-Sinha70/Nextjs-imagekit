@@ -26,9 +26,16 @@ export default function Sidebar() {
 
   return (
     <motion.aside
-      className={`relative bg-white bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl transition-all duration-300 ease-in-out ${
-        isOpen ? 'w-64' : 'w-20'
-      }`}
+      className={`
+        bg-white bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl
+        transition-all duration-300 ease-in-out
+        h-screen fixed top-0 z-50 overflow-hidden /* Mobile positioning */
+
+        ${isOpen ? 'left-0 w-64' : 'left-[-100%] w-0'} /* Mobile open/close states */
+
+        md:relative md:h-auto md:top-auto md:left-auto md:z-auto md:overflow-visible /* Reset mobile positioning for desktop */
+        ${isOpen ? 'md:w-64' : 'md:w-20'} /* Desktop open/close states */
+      `}
     >
       <motion.button
         onClick={() => setIsOpen(!isOpen)}

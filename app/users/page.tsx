@@ -29,7 +29,7 @@ export default function Users() {
 
   return (
     <DashboardLayout>
-      <main className="max-w-7xl mx-auto">
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="sm:px-0">
           <DashboardSection title="User Statistics">
             <UserStats />
