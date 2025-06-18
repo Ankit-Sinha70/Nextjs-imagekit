@@ -15,9 +15,9 @@ import { useState } from 'react';
 
 const menuItems = [
   { name: 'Dashboard', icon: HomeIcon, path: '/dashboard' },
-  { name: 'Analytics', icon: ChartBarIcon, path: '/dashboard/analytics' },
-  { name: 'Users', icon: UsersIcon, path: '/dashboard/users' },
-  { name: 'Settings', icon: CogIcon, path: '/dashboard/settings' },
+  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics' },
+  { name: 'Users', icon: UsersIcon, path: '/users' },
+  { name: 'Settings', icon: CogIcon, path: '/settings' },
 ];
 
 export default function Sidebar() {
@@ -26,13 +26,6 @@ export default function Sidebar() {
 
   return (
     <motion.aside
-      initial={{ x: -100 }}
-      animate={{ x: 0 }}
-      transition={{ 
-        type: "spring",
-        stiffness: 100,
-        damping: 20
-      }}
       className={`relative bg-white bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl transition-all duration-300 ease-in-out ${
         isOpen ? 'w-64' : 'w-20'
       }`}
@@ -42,15 +35,10 @@ export default function Sidebar() {
         className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100 transition-colors"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
         <AnimatePresence mode="wait">
           <motion.div
             key={isOpen ? 'close' : 'open'}
-            initial={{ rotate: 0, opacity: 0 }}
-            animate={{ rotate: 0, opacity: 1 }}
-            exit={{ rotate: 180, opacity: 0 }}
-            transition={{ duration: 0.2 }}
           >
             {isOpen ? (
               <ChevronLeftIcon className="w-4 h-4 text-indigo-600" />
@@ -65,14 +53,6 @@ export default function Sidebar() {
         <AnimatePresence mode="wait">
           {isOpen && (
             <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ 
-                type: "spring",
-                stiffness: 200,
-                damping: 20
-              }}
               className="text-2xl font-bold text-white"
             >
               Dashboard
@@ -92,29 +72,14 @@ export default function Sidebar() {
                 isActive ? 'bg-white/20 text-white' : ''
               }`}
             >
-              <motion.div
-                whileHover={{ scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
+              <div className="flex items-center">
                 <item.icon className="w-5 h-5" />
-              </motion.div>
-              <AnimatePresence mode="wait">
                 {isOpen && (
-                  <motion.span
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ 
-                      type: "spring",
-                      stiffness: 200,
-                      damping: 20
-                    }}
-                    className="ml-3"
-                  >
+                  <span className="ml-3">
                     {item.name}
-                  </motion.span>
+                  </span>
                 )}
-              </AnimatePresence>
+              </div>
             </Link>
           );
         })}

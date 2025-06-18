@@ -36,23 +36,17 @@ export default function Navbar() {
       };
   return (
     <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
       className="bg-white shadow-sm"
     >
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl">
         <div className="flex justify-between h-16">
           <motion.div
-            whileHover={{ scale: 1.05 }}
             className="flex items-center"
           >
             <h1 className="text-xl font-bold">Dashboard</h1>
           </motion.div>
           <div className="flex items-center">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               onClick={() => setShowLogoutModal(true)}
               className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
             >
