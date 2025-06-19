@@ -7,7 +7,7 @@ export async function PUT(request: Request) {
   await connectToDatabase();
 
   try {
-    const { currentPassword, newPassword, confirmPassword } = await request.json();
+    const { currentPassword: _currentPassword, newPassword, confirmPassword } = await request.json();
 
     if (newPassword !== confirmPassword) {
       return NextResponse.json({ message: 'New passwords do not match.' }, { status: 400 });

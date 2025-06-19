@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
+
 if (!process.env.MONGODB_URI) {
+  console.error('Error: MONGODB_URI environment variable is not defined.');
   throw new Error('Please add your Mongo URI to .env.local');
 }
 
@@ -18,37 +20,37 @@ if (!(global as any).mongoose) {
 
 export async function connectToDatabase() {
   if (cached.conn) {
+    console.log('Using existing database connection.');
     return cached.conn;
   }
 
   if (!cached.promise) {
+    console.log('Creating new database connection promise...');
     const opts = {
       bufferCommands: false,
+      // Add more options here if needed, e.g., useNewUrlParser: true, useUnifiedTopology: true
     };
 
-    cached.promise = mongoose.connect(uri, opts).then((mongoose) => {
-      return mongoose;
+    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
+      console.log('MongoDB connected successfully!');
+      return mongooseInstance;
+    }).catch((error) => {
+      console.error('MongoDB connection error:', error);
+      cached.promise = null; // Reset promise on failure to allow retry
+      throw error; // Re-throw to propagate the error
     });
   }
 
   try {
     cached.conn = await cached.promise;
-  } catch (e) {
+    console.log('Database connection resolved.');
+  } catch (e: any) {
     cached.promise = null;
+    console.error('Failed to resolve database connection promise:', e);
     throw e;
   }
 
   return cached.conn;
 }
 
-// Define User Schema if not already defined
-if (!mongoose.models.User) {
-  const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    name: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-  });
-
-  mongoose.models.User = mongoose.model('User', userSchema);
-}
+// Removed User Schema definition from here. It is handled in models/Profile.ts if needed.
