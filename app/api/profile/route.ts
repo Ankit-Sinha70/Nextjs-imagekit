@@ -1,13 +1,15 @@
-import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "../../../lib/db"; // Corrected path
-import Profile, { IProfile } from "../../../models/Profile"; // Corrected path
+import { connectToDatabase } from "../../../lib/db";
+import Profile, { IProfile } from "../../../models/Profile";
 import formidable, { Fields, Files, Part } from "formidable";
 import fs from "fs/promises";
 import path from "path";
 import { IncomingMessage } from "http";
 import { Readable } from "stream";
 import ImageKit from "imagekit";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import User from "../../../models/User";
 
 // Configure ImageKit SDK
 const imagekit = new ImageKit({
@@ -39,15 +41,12 @@ const ensureUploadDir = async () => {
   }
 };
 
-// Important: Next.js needs to know not to parse the body itself
-// when you are handling multipart/form-data with a library like formidable.
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-// but Next.js App Router provides a Web API Request object.
 async function streamIncomingMessage(req: Request): Promise<IncomingMessage> {
   const bodyBuffer = await req.arrayBuffer();
   const readable = new Readable();
@@ -65,30 +64,76 @@ async function streamIncomingMessage(req: Request): Promise<IncomingMessage> {
 
 // GET /api/profile - Fetches the user profile
 export async function GET(req: Request) {
-  console.log("Attempting to connect to database...");
+  ("Attempting to connect to database...");
   try {
     await connectToDatabase();
-    console.log("Database connected successfully.");
+    ("Database connected successfully.");
   } catch (dbError: any) {
     console.error("Database connection error in GET /api/profile:", dbError);
-    return NextResponse.json({ success: false, message: 'Database connection failed', error: dbError.message }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Database connection failed",
+        error: dbError.message,
+      },
+      { status: 500 }
+    );
   }
 
   try {
-    console.log("Attempting to find profile...");
-    let profile: IProfile | null = await Profile.findOne({});
-    
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const userEmail = session.user.email;
+    const userName = session.user.name;
+
+    `Attempting to find profile for user ID: ${userId}, Email: ${userEmail}`;
+    let profile: IProfile | null = await Profile.findOne({ user: userId });
+
     if (!profile) {
-      console.log("No profile found, attempting to create a default one...");
+      `No profile found for user ID: ${userId}. Attempting to create a default one...`;
+
+      // Fetch user details from User model to populate required profile fields
+      const userFromDb = await User.findById(userId).select("email name");
+      if (!userFromDb) {
+        console.error(
+          `Error: User ${userId} not found in DB when trying to create profile.`
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            message: "User not found to create profile",
+            error: "User data missing",
+          },
+          { status: 404 }
+        );
+      }
+
+      // Provide robust fallback values for required fields
+      const defaultFirstName =
+        userFromDb.name ||
+        (userFromDb.email ? userFromDb.email.split("@")[0] : "New");
+      const defaultLastName = userFromDb.email
+        ? userFromDb.email.split("@")[1]
+          ? userFromDb.email.split("@")[1].split(".")[0]
+          : "User"
+        : "User";
+
       profile = await Profile.create({
-        firstName: 'New',
-        lastName: 'User',
-        email: `default-user-${Date.now()}@example.com`,
-        phone: '',
-        location: '',
-        bio: 'This is a default profile. Please update your information.',
-        avatar: '',
+        user: userId,
+        firstName: defaultFirstName,
+        lastName: defaultLastName,
+        email: userFromDb.email,
+        phone: "",
+        location: "",
+        bio: "This is a default profile. Please update your information.",
+        avatar: "",
         twoFactorEnabled: false,
+        twoFactorConfirmed: false,
         notificationPreferences: {
           security: { email: true, push: true, sms: false, inApp: true },
           updates: { email: true, push: false, sms: false, inApp: true },
@@ -96,30 +141,39 @@ export async function GET(req: Request) {
           activity: { email: true, push: true, sms: false, inApp: true },
         },
         appearanceSettings: {
-          theme: 'light', fontSize: 'medium', compactMode: false, showAnimations: true, accentColor: 'blue'
-        }
+          theme: "light",
+          fontSize: "medium",
+          compactMode: false,
+          showAnimations: true,
+          accentColor: "blue",
+        },
       });
-      console.log("Created initial default profile with ID:", profile?._id);
     }
 
-    console.log("Profile fetched/created successfully:", profile);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return NextResponse.json({ success: true, profile: profile });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return NextResponse.json(profile);
   } catch (error: any) {
-    console.error("Error fetching or creating profile in GET /api/profile:", error);
-    return NextResponse.json({ success: false, message: 'Failed to fetch or create profile', error: error.message }, { status: 500 });
+    console.error(
+      "Error fetching or creating profile in GET /api/profile:",
+      error
+    );
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Failed to fetch or create profile",
+        error: error.message,
+      },
+      { status: 500 }
+    );
   }
 }
 
-// PUT /api/profile - Updates the user profile including avatar upload to ImageKit
 export async function PUT(req: Request) {
   await connectToDatabase();
 
   const form = formidable({
-    // formidable uses a temporary directory by default for uploads.
-    keepExtensions: true, // Keep original file extensions
-    maxFileSize: 5 * 1024 * 1024, // Max 5MB file size
-    // Do not set uploadDir here; ImageKit handles storage directly.
+    keepExtensions: true,
+    maxFileSize: 5 * 1024 * 1024,
   });
 
   const mockReq = await streamIncomingMessage(req);
@@ -136,27 +190,30 @@ export async function PUT(req: Request) {
         );
       }
 
-      // !!! IMPORTANT: In a real application, you must get the user ID from the authenticated session/token.
-      const profileId = Array.isArray(fields._id) ? fields._id[0] : null;
+      // !!! IMPORTANT: Get the user ID from the authenticated session.
+      const session = await getServerSession(authOptions);
+      if (!session || !session.user?.id) {
+        return resolve(new NextResponse("Unauthorized", { status: 401 }));
+      }
+      const userId = session.user.id;
 
-      if (!profileId) {
+      const profileIdFromRequest = Array.isArray(fields._id)
+        ? fields._id[0]
+        : null;
+      const currentProfile = await Profile.findOne({ user: userId });
+      if (!currentProfile) {
         return resolve(
           NextResponse.json(
-            { success: false, message: "Profile ID not provided for update." },
-            { status: 400 }
+            { success: false, message: "No profile found for logged in user." },
+            { status: 404 }
           )
         );
       }
 
       const updateData: Partial<IProfile> = {};
 
-      // Process textual fields from `fields` object
       for (const key in fields) {
-        if (
-          key !== "_id" &&
-          Array.isArray(fields[key]) &&
-          fields[key].length > 0
-        ) {
+        if (Array.isArray(fields[key]) && fields[key].length > 0) {
           const value = fields[key][0];
           if (
             key === "notificationPreferences" ||
@@ -169,28 +226,27 @@ export async function PUT(req: Request) {
               updateData[key as keyof IProfile] = value as any;
             }
           } else {
-            updateData[key as keyof IProfile] = value as any;
+            if (key !== "_id" && key !== "user" && key !== "twoFactorSecret") {
+              updateData[key as keyof IProfile] = value as any;
+            }
           }
         }
       }
 
       let avatarUrlToSave: string | undefined;
 
-      // Process avatar file upload (if 'avatarFile' was sent)
       if (files.avatarFile && files.avatarFile.length > 0) {
         const uploadedFile = files.avatarFile[0];
         try {
           const imagekitUploadResponse = await imagekit.upload({
-            file: await fs.readFile(uploadedFile.filepath), // Read the file buffer
-            fileName: uploadedFile.originalFilename || "avatar_upload", // Use original filename or a default
-            folder: "user_avatars", // Optional: organize your uploads in a specific folder in ImageKit
+            file: await fs.readFile(uploadedFile.filepath),
+            fileName: uploadedFile.originalFilename || `avatar_${userId}`,
+            folder: "user_avatars",
           });
           avatarUrlToSave = imagekitUploadResponse.url;
-          // Delete the temporary file created by formidable
           await fs.unlink(uploadedFile.filepath);
         } catch (imagekitError: any) {
           console.error("ImageKit upload error:", imagekitError);
-          // Try to clean up temp file even if ImageKit upload fails
           try {
             if (uploadedFile.filepath) await fs.unlink(uploadedFile.filepath);
           } catch (cleanupError) {
@@ -208,16 +264,14 @@ export async function PUT(req: Request) {
           );
         }
       } else {
-        // If no new avatar file is provided, keep the existing one
-        const currentProfile = await Profile.findById(profileId);
-        avatarUrlToSave = currentProfile?.avatar; // Use optional chaining to safely access avatar
+        avatarUrlToSave = currentProfile?.avatar;
       }
 
       updateData.avatar = avatarUrlToSave;
 
       try {
-        const updatedProfile = await Profile.findByIdAndUpdate(
-          profileId,
+        const updatedProfile = await Profile.findOneAndUpdate(
+          { user: userId },
           updateData,
           {
             new: true,
@@ -228,7 +282,10 @@ export async function PUT(req: Request) {
         if (!updatedProfile) {
           return resolve(
             NextResponse.json(
-              { success: false, message: "Profile not found for update" },
+              {
+                success: false,
+                message: "Profile not found for update (by user ID)",
+              },
               { status: 404 }
             )
           );

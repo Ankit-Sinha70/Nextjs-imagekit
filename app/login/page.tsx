@@ -3,11 +3,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNotification } from '../components/Notification';
 import Link from "next/link";
+import { signIn } from 'next-auth/react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTwoFactorInput, setShowTwoFactorInput] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
   const router = useRouter();
   const { showNotification } = useNotification();
 
@@ -16,25 +19,54 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      if (!showTwoFactorInput) {
+        const result = await signIn('credentials', {
+          redirect: false,
+          email,
+          password,
+        });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store token in localStorage
-        localStorage.setItem('token', data.token);
-        showNotification('Login successful!', 'success');
-        // Navigate to dashboard
-        router.push('/dashboard');
+        if (result?.error) {
+          if (result.error === 'TwoFactorRequired') {
+            setShowTwoFactorInput(true);
+            showNotification('Two-factor authentication required. Please enter your code.', 'info');
+          } else {
+            showNotification(result.error, 'error');
+          }
+        } else if (result?.ok) {
+          showNotification('Login successful!', 'success');
+          router.push('/dashboard');
+        }
       } else {
-        showNotification(data.message || 'Login failed', 'error');
+        const response = await fetch('/api/2fa/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, token: twoFactorCode }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          const finalSignInResult = await signIn('credentials', {
+            redirect: false,
+            email,
+            password,
+            twoFactorCode,
+          });
+
+          if (finalSignInResult?.ok) {
+            showNotification('Login successful with 2FA!', 'success');
+            router.push('/dashboard');
+          } else {
+            showNotification(finalSignInResult?.error || 'Login failed after 2FA verification.', 'error');
+          }
+        } else {
+          showNotification(data.message || 'Invalid 2FA code. Please try again.', 'error');
+        }
       }
-    } catch (error) {
-      showNotification('Login failed', 'error');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      showNotification(error.message || 'Login failed due to an unexpected error.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -50,32 +82,56 @@ export default function Login() {
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-6">
-            <div className="transform transition-all duration-300 hover:scale-[1.02]">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="transform transition-all duration-300 hover:scale-[1.02]">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+            {!showTwoFactorInput && (
+              <>
+                <div className="transform transition-all duration-300 hover:scale-[1.02]">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="transform transition-all duration-300 hover:scale-[1.02]">
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </>
+            )}
+
+            {showTwoFactorInput && (
+              <div className="transform transition-all duration-300 hover:scale-[1.02]">
+                <label htmlFor="two-factor-code" className="block text-sm font-medium text-gray-700 mb-2">Two-Factor Code</label>
+                <input
+                  id="two-factor-code"
+                  name="two-factor-code"
+                  type="text"
+                  required
+                  className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center text-lg font-mono tracking-widest"
+                  placeholder="------"
+                  maxLength={6}
+                  value={twoFactorCode}
+                  onChange={(e) => setTwoFactorCode(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
           </div>
 
           <div>
@@ -90,14 +146,20 @@ export default function Login() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Signing in...
+                  {showTwoFactorInput ? 'Verifying 2FA...' : 'Signing in...'}
                 </span>
               ) : (
-                'Sign in'
+                showTwoFactorInput ? 'Verify 2FA & Sign in' : 'Sign in'
               )}
             </button>
           </div>
         </form>
+        <div className="text-center text-sm text-gray-600">
+          Not a member?{' '}
+          <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+            Sign up now
+          </Link>
+        </div>
       </div>
     </div>
   );

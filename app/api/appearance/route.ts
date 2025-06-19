@@ -17,7 +17,6 @@ export async function GET() {
         email: `default-user-${Date.now()}@example.com`,
         // Other default fields will be set by schema defaults
       });
-      console.log("Created initial default profile for appearance settings:", profile);
     }
 
     // Return only the appearanceSettings
@@ -47,7 +46,6 @@ export async function PUT(request: Request) {
         email: `temp-user-${Date.now()}@example.com`,
         appearanceSettings: updatedSettings, // Set received settings
       });
-      console.log("Created new profile and set appearance settings:", profile);
     } else {
       // Update the existing profile's appearance settings
       // Ensure only allowed fields are updated to prevent arbitrary data injection
@@ -60,7 +58,6 @@ export async function PUT(request: Request) {
         accentColor: updatedSettings.accentColor || profile.appearanceSettings.accentColor,
       };
       await profile.save();
-      console.log("Updated appearance settings for existing profile:", profile.appearanceSettings);
     }
 
     await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay

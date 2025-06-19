@@ -20,19 +20,19 @@ if (!(global as any).mongoose) {
 
 export async function connectToDatabase() {
   if (cached.conn) {
-    console.log('Using existing database connection.');
+    ('Using existing database connection.');
     return cached.conn;
   }
 
   if (!cached.promise) {
-    console.log('Creating new database connection promise...');
+    ('Creating new database connection promise...');
     const opts = {
       bufferCommands: false,
       // Add more options here if needed, e.g., useNewUrlParser: true, useUnifiedTopology: true
     };
 
     cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
-      console.log('MongoDB connected successfully!');
+      ('MongoDB connected successfully!');
       return mongooseInstance;
     }).catch((error) => {
       console.error('MongoDB connection error:', error);
@@ -43,7 +43,7 @@ export async function connectToDatabase() {
 
   try {
     cached.conn = await cached.promise;
-    console.log('Database connection resolved.');
+    ('Database connection resolved.');
   } catch (e: any) {
     cached.promise = null;
     console.error('Failed to resolve database connection promise:', e);

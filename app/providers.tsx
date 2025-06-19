@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NotificationProvider } from './components/Notification';
+import { SessionProvider } from 'next-auth/react';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -10,7 +11,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <NotificationProvider>
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </NotificationProvider>
     </QueryClientProvider>
   );

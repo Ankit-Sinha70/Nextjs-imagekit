@@ -27,6 +27,7 @@ export interface IAppearanceSettings {
 
 // Define the interface for your Profile document
 export interface IProfile extends Document {
+  user: mongoose.Types.ObjectId; // Link to the User model
   firstName: string;
   lastName: string;
   email: string;
@@ -37,6 +38,8 @@ export interface IProfile extends Document {
   // New fields for security settings
   hashedPassword?: string; // Storing hashed password
   twoFactorEnabled: boolean; // Status of 2FA
+  twoFactorSecret?: string; // New: To store the 2FA secret
+  twoFactorConfirmed?: boolean; // New: To indicate if 2FA setup is complete
   notificationPreferences: INotificationPreferences; // New field
   appearanceSettings: IAppearanceSettings; // New field
 }
@@ -60,6 +63,12 @@ const AppearanceSettingsSchema: Schema = new Schema({
 
 // Define the Profile Schema
 const ProfileSchema: Schema = new Schema({
+  user: {
+    type: mongoose.Types.ObjectId,
+    ref: 'User', // References your User model
+    required: true,
+    unique: true, // Ensures one profile per user
+  },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -70,6 +79,15 @@ const ProfileSchema: Schema = new Schema({
   // New fields for security settings
   hashedPassword: { type: String, required: false },
   twoFactorEnabled: { type: Boolean, default: false },
+  twoFactorSecret: {
+    type: String,
+    // You might want to make this sparse if not all users have 2FA enabled
+    // sparse: true,
+  },
+  twoFactorConfirmed: {
+    type: Boolean,
+    default: false,
+  },
   notificationPreferences: { // New field using nested schemas
     security: { type: ChannelSettingsSchema, default: { email: true, push: true, sms: false, inApp: true } },
     updates: { type: ChannelSettingsSchema, default: { email: true, push: false, sms: false, inApp: true } },

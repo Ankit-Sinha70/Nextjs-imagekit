@@ -1,14 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { User, Mail, Phone, MapPin, Camera } from 'lucide-react';
-import { useNotification } from '../Notification';
-// Removed import of IProfile to avoid Mongoose Document type conflicts on frontend
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { User, Mail, Phone, MapPin, Camera } from "lucide-react";
+import { useNotification } from "../Notification";
 
-// Define a type for the profile data relevant to the frontend component
 interface ProfileData {
-  _id?: string; // MongoDB _id is optional on frontend initial state
+  _id?: string; 
   firstName: string;
   lastName: string;
   email: string;
@@ -18,33 +16,32 @@ interface ProfileData {
   avatar?: string;
   twoFactorEnabled: boolean;
   notificationPreferences: {
-    security: { email: boolean; push: boolean; sms: boolean; inApp: boolean; };
-    updates: { email: boolean; push: boolean; sms: boolean; inApp: boolean; };
-    marketing: { email: boolean; push: boolean; sms: boolean; inApp: boolean; };
-    activity: { email: boolean; push: boolean; sms: boolean; inApp: boolean; };
+    security: { email: boolean; push: boolean; sms: boolean; inApp: boolean };
+    updates: { email: boolean; push: boolean; sms: boolean; inApp: boolean };
+    marketing: { email: boolean; push: boolean; sms: boolean; inApp: boolean };
+    activity: { email: boolean; push: boolean; sms: boolean; inApp: boolean };
   };
   appearanceSettings: {
-    theme: 'light' | 'dark' | 'auto';
-    fontSize: 'small' | 'medium' | 'large';
+    theme: "light" | "dark" | "auto";
+    fontSize: "small" | "medium" | "large";
     compactMode: boolean;
     showAnimations: boolean;
     accentColor: string;
   };
-  createdAt?: string; // Optional timestamps from Mongoose
+  createdAt?: string;
   updatedAt?: string;
-  __v?: number; // Mongoose version key
+  __v?: number;
 }
 
 export default function ProfileSettings() {
   const [profile, setProfile] = useState<ProfileData>({
-    // Initialize with default values matching ProfileData schema
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    location: '',
-    bio: '',
-    avatar: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    location: "",
+    bio: "",
+    avatar: "",
     twoFactorEnabled: false,
     notificationPreferences: {
       security: { email: false, push: false, sms: false, inApp: false },
@@ -53,10 +50,13 @@ export default function ProfileSettings() {
       activity: { email: false, push: false, sms: false, inApp: false },
     },
     appearanceSettings: {
-      theme: 'light', fontSize: 'medium', compactMode: false, showAnimations: true, accentColor: 'blue'
-    }
+      theme: "light",
+      fontSize: "medium",
+      compactMode: false,
+      showAnimations: true,
+      accentColor: "blue",
+    },
   });
-  console.log('profile', profile)
 
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,22 +68,19 @@ export default function ProfileSettings() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch('/api/profile');
+        const response = await fetch("/api/profile");
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
         }
         const result = await response.json();
-        console.log('result', result)
-        if (result.success && result.data) {
-          setProfile(result.data);
-        } else if (result.success && result.profile) {
-          setProfile(result.profile);
-        } else {
-          throw new Error(result.message || 'Failed to fetch profile data.');
-        }
+
+        setProfile(result);
       } catch (e: any) {
-        setError('Failed to load profile: ' + e.message);
-        showNotification('Failed to load profile!', 'error');
+        setError("Failed to load profile: " + e.message);
+        showNotification("Failed to load profile!", "error");
       } finally {
         setIsLoading(false);
       }
@@ -109,51 +106,55 @@ export default function ProfileSettings() {
     try {
       const formData = new FormData();
 
-      // Append all profile fields to FormData
       Object.entries(profile).forEach(([key, value]) => {
-        if (key === 'avatar' && newAvatarFile) {
-          // If a new avatar file is selected, we'll append it separately.
+        if (key === "avatar" && newAvatarFile) {
           return;
         }
 
-        // For nested objects, stringify them before appending to FormData
-        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            formData.append(key, JSON.stringify(value));
+        // --- FIX IS HERE: Handle boolean and other types explicitly ---
+        if (typeof value === "boolean") {
+          formData.append(key, value ? "true" : "false");
+        } else if (
+          typeof value === "object" &&
+          value !== null &&
+          !Array.isArray(value)
+        ) {
+          formData.append(key, JSON.stringify(value));
         } else {
-            formData.append(key, String(value)); // Ensure all values are strings
+          formData.append(key, String(value || ""));
         }
       });
-
-      // If a new avatar file was selected, append it as 'avatarFile'
       if (newAvatarFile) {
-        formData.append('avatarFile', newAvatarFile);
-      }
-      
-      // Also, ensure the profile's _id is included in the FormData
-      if (profile._id) { // Check if _id exists before appending
-        formData.append('_id', profile._id);
+        formData.append("avatarFile", newAvatarFile);
       }
 
-
-      const response = await fetch('/api/profile', {
-        method: 'PUT',
+      const response = await fetch("/api/profile", {
+        method: "PUT",
         body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${
+            errorData.message || "Unknown error"
+          }`
+        );
       }
 
       const result = await response.json();
-      // The backend now returns { success: true, profile: updatedProfile }
-      setProfile(result.profile); // Update local state with the saved profile data
-      setNewAvatarFile(null); // Clear the temporary file state
+      if (result.success && result.profile) {
+        setProfile(result.profile);
+      } else {
+        setProfile(result);
+      }
+
+      setNewAvatarFile(null);
       setIsEditing(false);
-      showNotification('Profile updated successfully!', 'success');
+      showNotification("Profile updated successfully!", "success");
     } catch (e: any) {
-      setError('Failed to save profile: ' + e.message);
-      showNotification('Failed to save profile!', 'error');
+      setError("Failed to save profile: " + e.message);
+      showNotification("Failed to save profile!", "error");
     } finally {
       setIsLoading(false);
     }
@@ -161,10 +162,11 @@ export default function ProfileSettings() {
 
   const handleCancel = () => {
     setIsEditing(false);
-    showNotification('Changes discarded', 'info');
+    showNotification("Changes discarded", "info");
   };
 
-  if (isLoading) { // Check only for isLoading during initial load
+  if (isLoading) {
+    // Check only for isLoading during initial load
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
         Loading profile...
@@ -183,7 +185,9 @@ export default function ProfileSettings() {
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Personal Information
+        </h3>
         {!isEditing ? (
           <button
             onClick={() => setIsEditing(true)}
@@ -198,7 +202,7 @@ export default function ProfileSettings() {
               disabled={isLoading}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Saving...' : 'Save Changes'}
+              {isLoading ? "Saving..." : "Save Changes"}
             </button>
             <button
               onClick={handleCancel}
@@ -217,13 +221,18 @@ export default function ProfileSettings() {
           <div className="flex flex-col items-center">
             <div className="relative">
               {profile.avatar ? (
-                <img src={profile.avatar} alt="Profile Avatar" className="w-32 h-32 rounded-full object-cover mb-4" />
+                <img
+                  src={profile.avatar}
+                  alt="Profile Avatar"
+                  className="w-32 h-32 rounded-full object-cover mb-4"
+                />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl font-bold mb-4">
-                  {profile.firstName?.charAt(0)}{profile?.lastName?.charAt(0)}
+                  {profile.firstName?.charAt(0)}
+                  {profile?.lastName?.charAt(0)}
                 </div>
               )}
-              
+
               {isEditing && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -234,7 +243,7 @@ export default function ProfileSettings() {
               )}
             </div>
             <p className="text-sm text-gray-500 text-center">
-              {isEditing ? 'Click to change photo' : 'Profile photo'}
+              {isEditing ? "Click to change photo" : "Profile photo"}
             </p>
             <input
               type="file"
@@ -257,8 +266,10 @@ export default function ProfileSettings() {
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  value={profile?.firstName || ''} // Add || '' for controlled component
-                  onChange={(e) => setProfile({...profile, firstName: e.target.value})}
+                  value={profile?.firstName || ""} // Add || '' for controlled component
+                  onChange={(e) =>
+                    setProfile({ ...profile, firstName: e.target.value })
+                  }
                   disabled={!isEditing}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 />
@@ -273,8 +284,10 @@ export default function ProfileSettings() {
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  value={profile?.lastName || ''} // Add || '' for controlled component
-                  onChange={(e) => setProfile({...profile, lastName: e.target.value})}
+                  value={profile?.lastName || ""} // Add || '' for controlled component
+                  onChange={(e) =>
+                    setProfile({ ...profile, lastName: e.target.value })
+                  }
                   disabled={!isEditing}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 />
@@ -289,8 +302,10 @@ export default function ProfileSettings() {
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="email"
-                  value={profile?.email || ''} // Add || '' for controlled component
-                  onChange={(e) => setProfile({...profile, email: e.target.value})}
+                  value={profile?.email || ""} // Add || '' for controlled component
+                  onChange={(e) =>
+                    setProfile({ ...profile, email: e.target.value })
+                  }
                   disabled={!isEditing}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 />
@@ -305,8 +320,10 @@ export default function ProfileSettings() {
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="tel"
-                  value={profile?.phone || ''} // Add || '' for controlled component
-                  onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                  value={profile?.phone || ""} // Add || '' for controlled component
+                  onChange={(e) =>
+                    setProfile({ ...profile, phone: e.target.value })
+                  }
                   disabled={!isEditing}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 />
@@ -321,8 +338,10 @@ export default function ProfileSettings() {
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  value={profile?.location || ''} // Add || '' for controlled component
-                  onChange={(e) => setProfile({...profile, location: e.target.value})}
+                  value={profile?.location || ""} // Add || '' for controlled component
+                  onChange={(e) =>
+                    setProfile({ ...profile, location: e.target.value })
+                  }
                   disabled={!isEditing}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
                 />
@@ -334,8 +353,10 @@ export default function ProfileSettings() {
                 Bio
               </label>
               <textarea
-                value={profile?.bio || ''} // Add || '' for controlled component
-                onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                value={profile?.bio || ""} // Add || '' for controlled component
+                onChange={(e) =>
+                  setProfile({ ...profile, bio: e.target.value })
+                }
                 disabled={!isEditing}
                 rows={3}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
@@ -347,4 +368,4 @@ export default function ProfileSettings() {
       </div>
     </div>
   );
-} 
+}
