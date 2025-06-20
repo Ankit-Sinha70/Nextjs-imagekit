@@ -1,15 +1,17 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose, { Schema, models, model, Document, Model } from "mongoose";
 
 export const VIDEO_DIMENSIONS = {
   width: 1080,
   height: 1920,
 } as const;
 
-export interface Ivideo {
-  _id?: mongoose.Types.ObjectId;
+export interface IVideo extends Document {
+  _id: mongoose.Types.ObjectId;
   title: string;
   description: string;
-  videoUrl: string;
+  url: string;
+  fileId: string;
+  name: string;
   thumbnailUrl: string;
   controls?: boolean;
   transformation?: {
@@ -17,25 +19,36 @@ export interface Ivideo {
     width: number;
     quality?: number;
   };
+  owner: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const videoSchema = new Schema<Ivideo>(
+const videoSchema = new Schema<IVideo>(
   {
     title: {
       type: String,
       required: true,
+      trim: true,
     },
     description: {
       type: String,
+      trim: true,
+    },
+    url: {
+      type: String,
       required: true,
     },
-    videoUrl: {
+    fileId: {
+      type: String,
+      required: true,
+    },
+    name: {
       type: String,
       required: true,
     },
     thumbnailUrl: {
       type: String,
-      required: true,
     },
     controls: {
       type: Boolean,
@@ -56,12 +69,17 @@ const videoSchema = new Schema<Ivideo>(
         max: 100,
       },
     },
+    owner: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const Video = models.Video || model<Ivideo>("Video", videoSchema);
+const Video: Model<IVideo> = models.Video || model<IVideo>("Video", videoSchema);
 
 export default Video;

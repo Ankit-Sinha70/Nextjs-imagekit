@@ -1,33 +1,45 @@
-import { NextResponse } from 'next/server';
-import { unlink } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { NextResponse, NextRequest } from 'next/server';
+import { connectToDatabase } from '../../../../lib/db';
+import Video from '../../../../models/Video'; 
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  { params }: { params: { id: string } } 
 ) {
   try {
     const videoId = params.id;
-    const filePath = join(process.cwd(), 'public', 'uploads', videoId);
 
-    if (!existsSync(filePath)) {
+    if (!videoId) {
+      return NextResponse.json(
+        { message: 'Video ID is required' },
+        { status: 400 }
+      );
+    }
+
+    await connectToDatabase();
+
+    // Find and delete the video by its _id
+    const deletedVideo = await Video.findByIdAndDelete(videoId);
+
+    if (!deletedVideo) {
       return NextResponse.json(
         { message: 'Video not found' },
         { status: 404 }
       );
     }
 
-    await unlink(filePath);
-
-    return NextResponse.json({
-      message: 'Video deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete error:', error);
     return NextResponse.json(
-      { message: 'Error deleting video' },
+      { message: 'Video deleted successfully', videoId: deletedVideo._id },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error deleting video:', error);
+    return NextResponse.json(
+      {
+        message: 'Error deleting video',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
-} 
+}

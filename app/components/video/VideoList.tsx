@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button"
 
 interface Video {
-  id: string;
+  _id: string;
   url: string;
   title: string;
   createdAt: string;
@@ -26,9 +26,11 @@ export default function VideoList() {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('/api/videos');
+      const response = await fetch('/api/video');
+      console.log('response', response)
       if (response.ok) {
         const data = await response.json();
+        console.log("Videos received by frontend:", data);
         setVideos(data);
       }
     } catch (error) {
@@ -47,13 +49,13 @@ export default function VideoList() {
     if (!videoToDelete) return;
 
     try {
-      const response = await fetch(`/api/videos/${videoToDelete.id}`, {
+      const response = await fetch(`/api/videos/${videoToDelete._id}`, {
         method: 'DELETE',
       });
 
       if (response.ok) {
         showNotification('Video deleted successfully', 'success');
-        setVideos(videos.filter(v => v.id !== videoToDelete.id));
+        setVideos(videos.filter(v => v._id !== videoToDelete._id));
       } else {
         throw new Error('Failed to delete video');
       }
@@ -75,7 +77,7 @@ export default function VideoList() {
         <AnimatePresence>
           {videos.map((video) => (
             <motion.div
-              key={video.id}
+              key={video._id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
