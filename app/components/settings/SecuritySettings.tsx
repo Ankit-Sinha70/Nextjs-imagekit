@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Lock, Shield, Key, Smartphone, Eye, EyeOff } from "lucide-react";
 import { useNotification } from "../Notification";
+import { toast } from "sonner";
 
 export default function SecuritySettings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -43,6 +44,7 @@ export default function SecuritySettings() {
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
   const [isLoadingTwoFactor, setIsLoadingTwoFactor] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
+  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
   // New states for 2FA setup flow
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
@@ -69,10 +71,7 @@ export default function SecuritySettings() {
         setTwoFactorEnabled(data.twoFactorEnabled || false);
       } catch (error: any) {
         console.error("Failed to fetch initial security settings:", error);
-        showNotification(
-          `Failed to load security settings: ${error.message}`,
-          "error"
-        );
+        toast(`Failed to load security settings: ${error.message}`);
       } finally {
         setIsLoadingInitial(false);
       }
@@ -82,11 +81,11 @@ export default function SecuritySettings() {
 
   const handlePasswordChange = async () => {
     if (passwords.new !== passwords.confirm) {
-      showNotification("New passwords do not match", "error");
+      toast.error("New passwords do not match");
       return;
     }
     if (passwords.new.length < 8) {
-      showNotification("Password must be at least 8 characters long", "error");
+      toast.error("Password must be at least 8 characters long");
       return;
     }
 
@@ -111,10 +110,10 @@ export default function SecuritySettings() {
       }
 
       setPasswords({ current: "", new: "", confirm: "" });
-      showNotification(data.message, "success");
+      toast.success(data.message);
     } catch (error: any) {
       console.error("Password update error:", error);
-      showNotification(error.message, "error");
+      toast.error(error.message);
     } finally {
       setIsLoadingPassword(false);
     }
@@ -122,7 +121,6 @@ export default function SecuritySettings() {
 
   const handleTwoFactorToggle = async () => {
     if (twoFactorEnabled) {
-      // If 2FA is currently enabled, disable it
       setIsLoadingTwoFactor(true);
       try {
         const response = await fetch("/api/security/two-factor", {
@@ -142,14 +140,14 @@ export default function SecuritySettings() {
         }
 
         setTwoFactorEnabled(data.twoFactorEnabled);
-        showNotification(data.message, "success");
+        toast.success(data.message);
         setQrCodeImage(null);
         setTwoFactorSecret(null);
         setTwoFactorCodeInput("");
         setShowTwoFactorSetupFlow(false);
       } catch (error: any) {
         console.error("2FA disable error:", error);
-        showNotification(error.message, "error");
+        toast.error(error.message);
       } finally {
         setIsLoadingTwoFactor(false);
       }
@@ -174,7 +172,7 @@ export default function SecuritySettings() {
         );
       } catch (error: any) {
         console.error("2FA generate error:", error);
-        showNotification(error.message, "error");
+        toast.error(error.message);
       } finally {
         setIsLoadingTwoFactor(false);
       }
@@ -183,10 +181,7 @@ export default function SecuritySettings() {
 
   const handleVerify2FA = async () => {
     if (!twoFactorSecret || !twoFactorCodeInput) {
-      showNotification(
-        "Please scan the QR code and enter the 6-digit code.",
-        "error"
-      );
+      toast.error("Please scan the QR code and enter the 6-digit code.");
       return;
     }
 
@@ -212,14 +207,14 @@ export default function SecuritySettings() {
       }
 
       setTwoFactorEnabled(true);
-      showNotification(data.message, "success");
+      toast.success(data.message);
       setQrCodeImage(null);
       setTwoFactorSecret(null);
       setTwoFactorCodeInput("");
       setShowTwoFactorSetupFlow(false);
     } catch (error: any) {
       console.error("2FA verification error:", error);
-      showNotification(error.message, "error");
+      toast.error(error.message);
     } finally {
       setIsLoadingTwoFactor(false);
     }
@@ -242,7 +237,6 @@ export default function SecuritySettings() {
 
   return (
     <div className="space-y-6">
-      {/* Password Change Section */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center mb-6">
           <Lock className="w-6 h-6 text-blue-600 mr-3" />
@@ -354,7 +348,6 @@ export default function SecuritySettings() {
         </div>
       </div>
 
-      {/* Two-Factor Authentication */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
@@ -401,7 +394,6 @@ export default function SecuritySettings() {
           </div>
         </div>
 
-        {/* 2FA Setup Flow Section */}
         {!twoFactorEnabled && showTwoFactorSetupFlow && qrCodeImage && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -470,7 +462,6 @@ export default function SecuritySettings() {
         )}
       </div>
 
-      {/* Active Sessions */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center mb-6">
           <Smartphone className="w-6 h-6 text-purple-600 mr-3" />

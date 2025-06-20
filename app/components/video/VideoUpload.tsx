@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useNotification } from '../Notification';
+import { toast } from 'sonner';
 
 export default function VideoUpload() {
   const [isUploading, setIsUploading] = useState(false);
-  const { showNotification } = useNotification();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -13,13 +12,13 @@ export default function VideoUpload() {
 
     // Check if file is a video
     if (!file.type.startsWith('video/')) {
-      showNotification('Please upload a video file', 'error');
+      toast.error('Please upload a video file');
       return;
     }
 
     // Check file size (e.g., 100MB limit)
     if (file.size > 100 * 1024 * 1024) {
-      showNotification('File size should be less than 100MB', 'error');
+      toast.error('File size should be less than 100MB');
       return;
     }
 
@@ -36,7 +35,7 @@ export default function VideoUpload() {
       const data = await response.json();
 
       if (response.ok) {
-        showNotification('Video uploaded successfully', 'success');
+        toast.success('Video uploaded successfully');
         // Refresh video list
         window.location.reload();
       } else {
@@ -44,9 +43,8 @@ export default function VideoUpload() {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      showNotification(
-        error instanceof Error ? error.message : 'Failed to upload video',
-        'error'
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to upload video'
       );
     } finally {
       setIsUploading(false);

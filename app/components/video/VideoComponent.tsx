@@ -1,8 +1,8 @@
-import { Ivideo } from "@/models/Video";
+import { IVideo } from "@/models/Video";
 import Link from "next/link";
 import { IKVideo } from "imagekitio-react";
 
-export default function VideoComponent({ video }: { video: Ivideo }) {
+export default function VideoComponent({ video }: { video: IVideo }) {
   return (
     <div className="card bg-base-100 shadow hover:shadow-lg transition-all duration-300">
       <figure className="relative px-4 pt-4">
@@ -12,7 +12,7 @@ export default function VideoComponent({ video }: { video: Ivideo }) {
             style={{ aspectRatio: "9/16" }}
           >
             <IKVideo
-              path={video.videoUrl}
+              path={video.url}
               transformation={[
                 {
                   height: "1920",

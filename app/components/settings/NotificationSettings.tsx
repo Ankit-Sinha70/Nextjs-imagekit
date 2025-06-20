@@ -1,9 +1,8 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Bell, Mail, MessageSquare, Smartphone, Globe } from 'lucide-react';
-import { useNotification } from '../Notification';
+"use client";
+import { useState, useEffect, useRef } from "react";
+import { Bell, Mail, MessageSquare, Smartphone, Globe } from "lucide-react";
+import { toast } from "sonner";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface NotificationSetting {
   id: string;
@@ -15,13 +14,44 @@ interface NotificationSetting {
   inApp: boolean;
 }
 
-// Helper function to transform API data to frontend state format
 const transformApiDataToFrontend = (apiData: any): NotificationSetting[] => {
   const defaultSettings: NotificationSetting[] = [
-    { id: 'security', title: 'Security Alerts', description: 'Get notified about login attempts and security updates', email: false, push: false, sms: false, inApp: false },
-    { id: 'updates', title: 'System Updates', description: 'Receive notifications about new features and updates', email: false, push: false, sms: false, inApp: false },
-    { id: 'marketing', title: 'Marketing Communications', description: 'Receive promotional emails and special offers', email: false, push: false, sms: false, inApp: false },
-    { id: 'activity', title: 'Activity Notifications', description: 'Get notified about comments, likes, and other activities', email: false, push: false, sms: false, inApp: false }
+    {
+      id: "security",
+      title: "Security Alerts",
+      description: "Get notified about login attempts and security updates",
+      email: false,
+      push: false,
+      sms: false,
+      inApp: false,
+    },
+    {
+      id: "updates",
+      title: "System Updates",
+      description: "Receive notifications about new features and updates",
+      email: false,
+      push: false,
+      sms: false,
+      inApp: false,
+    },
+    {
+      id: "marketing",
+      title: "Marketing Communications",
+      description: "Receive promotional emails and special offers",
+      email: false,
+      push: false,
+      sms: false,
+      inApp: false,
+    },
+    {
+      id: "activity",
+      title: "Activity Notifications",
+      description: "Get notified about comments, likes, and other activities",
+      email: false,
+      push: false,
+      sms: false,
+      inApp: false,
+    },
   ];
 
   if (!apiData) return defaultSettings;
@@ -55,21 +85,30 @@ const transformFrontendDataToApi = (frontendData: NotificationSetting[]): { [key
 export default function NotificationSettings() {
   const [settings, setSettings] = useState<NotificationSetting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { showNotification } = useNotification();
+  const [hasFetchedInitial, setHasFetchedInitial] = useState(false);
 
-  // Fetch initial notification settings on component mount
+  const hasFetchedRef = useRef(false);
+
+  const debouncedSettings = useDebounce(settings, 500);
+
   useEffect(() => {
+    if (hasFetchedRef.current) {
+      return;
+    }
+
+    hasFetchedRef.current = true;
+
     const fetchSettings = async () => {
       try {
-        const response = await fetch('/api/notifications');
-        if (!response.ok) {
+        const response = await fetch("/api/notifications");
+        if (!response.ok)
           throw new Error(`HTTP error! status: ${response.status}`);
-        }
         const data = await response.json();
-        setSettings(transformApiDataToFrontend(data)); // Transform and set state
+        setSettings(transformApiDataToFrontend(data));
+        setHasFetchedInitial(true);
       } catch (error: any) {
         console.error("Failed to fetch notification settings:", error);
-        showNotification('Failed to load notification settings.', 'error');
+        toast.error("Failed to load notification settings.");
       } finally {
         setIsLoading(false);
       }
@@ -77,55 +116,71 @@ export default function NotificationSettings() {
     fetchSettings();
   }, []);
 
-  const sendUpdateToApi = async (updatedSettings: NotificationSetting[]) => {
+  useEffect(() => {
+    if (hasFetchedInitial && !isLoading && debouncedSettings.length > 0) {
+      sendUpdateToApi(
+        debouncedSettings,
+        "Notification preferences updated successfully!",
+        "Failed to update notification preferences."
+      );
+    }
+  }, [debouncedSettings, hasFetchedInitial, isLoading]);
+
+  const sendUpdateToApi = async (
+    settingsToSend: NotificationSetting[],
+    successMessage?: string,
+    errorMessage?: string
+  ) => {
     try {
-      const apiData = transformFrontendDataToApi(updatedSettings); // Transform to API format
-      const response = await fetch('/api/notifications', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const apiData = transformFrontendDataToApi(settingsToSend);
+      const response = await fetch("/api/notifications", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(apiData),
       });
 
       const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.message || "Failed to update settings");
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update notification settings');
-      }
-      showNotification(data.message, 'success');
-      // Optionally re-fetch or ensure state is aligned with backend response if needed
-      // For now, we trust the optimistic update on client side
+      toast.success(
+        successMessage || data.message || "Settings updated successfully."
+      );
     } catch (error: any) {
       console.error("Notification update error:", error);
-      showNotification(error.message, 'error');
-      // If update fails, you might want to revert the UI state
-      // setSettings(originalSettings); // Requires storing original state
+      toast.error(errorMessage || error.message || "Update failed");
     }
   };
 
-  const handleToggle = (settingId: string, channel: keyof Omit<NotificationSetting, 'id' | 'title' | 'description'>) => {
-    setSettings(prevSettings => {
-      const newSettings = prevSettings.map(setting => 
-        setting.id === settingId 
+  const handleToggle = (
+    settingId: string,
+    channel: keyof Omit<NotificationSetting, "id" | "title" | "description">
+  ) => {
+    setSettings((prevSettings) => {
+      return prevSettings.map((setting) =>
+        setting.id === settingId
           ? { ...setting, [channel]: !setting[channel] }
           : setting
       );
-      sendUpdateToApi(newSettings); // Send update to API immediately
-      return newSettings;
     });
   };
 
   const handleSaveAll = () => {
-    sendUpdateToApi(settings); // Send all current settings to API
-    showNotification('All notification settings saved!', 'success');
+    sendUpdateToApi(
+      settings,
+      "All notification settings saved!",
+      "Failed to save all notification settings."
+    );
   };
 
   const handleReset = () => {
-    const defaultFrontendSettings = transformApiDataToFrontend({}); // Get defaults from our helper
+    const defaultFrontendSettings = transformApiDataToFrontend({});
     setSettings(defaultFrontendSettings);
-    sendUpdateToApi(defaultFrontendSettings); // Send reset state to API
-    showNotification('Settings reset to defaults', 'info');
+    sendUpdateToApi(
+      defaultFrontendSettings,
+      "Settings reset to defaults!",
+      "Failed to reset settings."
+    );
   };
 
   if (isLoading) {
@@ -192,11 +247,15 @@ export default function NotificationSettings() {
           <div key={setting.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h4 className="text-md font-semibold text-gray-900">{setting.title}</h4>
-                <p className="text-sm text-gray-500 mt-1">{setting.description}</p>
+                <h4 className="text-md font-semibold text-gray-900">
+                  {setting.title}
+                </h4>
+                <p className="text-sm text-gray-500 mt-1">
+                  {setting.description}
+                </p>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex items-center">
@@ -207,7 +266,7 @@ export default function NotificationSettings() {
                   <input
                     type="checkbox"
                     checked={setting.email}
-                    onChange={() => handleToggle(setting.id, 'email')}
+                    onChange={() => handleToggle(setting.id, "email")}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -223,7 +282,7 @@ export default function NotificationSettings() {
                   <input
                     type="checkbox"
                     checked={setting.push}
-                    onChange={() => handleToggle(setting.id, 'push')}
+                    onChange={() => handleToggle(setting.id, "push")}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -239,7 +298,7 @@ export default function NotificationSettings() {
                   <input
                     type="checkbox"
                     checked={setting.sms}
-                    onChange={() => handleToggle(setting.id, 'sms')}
+                    onChange={() => handleToggle(setting.id, "sms")}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -255,7 +314,7 @@ export default function NotificationSettings() {
                   <input
                     type="checkbox"
                     checked={setting.inApp}
-                    onChange={() => handleToggle(setting.id, 'inApp')}
+                    onChange={() => handleToggle(setting.id, "inApp")}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -281,4 +340,4 @@ export default function NotificationSettings() {
       </div>
     </div>
   );
-} 
+}

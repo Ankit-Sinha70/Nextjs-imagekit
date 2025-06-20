@@ -16,7 +16,6 @@ export const authOptions: NextAuthOptions = {
         twoFactorCode: { label: "Two-Factor Code", type: "text", required: false },
       },
       async authorize(credentials) {
-        ('Authorize function started for email:', credentials?.email);
 
         if (!credentials?.email || !credentials?.password) {
           ('Error: Missing email or password.');
@@ -28,15 +27,14 @@ export const authOptions: NextAuthOptions = {
           ('Database connected.');
 
           const user = await User.findOne({ email: credentials.email });
-          ('User found:', user ? user.email : 'null');
 
           if (!user) {
-            ('Error: No user found with this email.');
+            console.log('Error: No user found with this email.');
             throw new Error("No user found with this email");
           }
 
           if (!user.password) {
-            ('Error: User has no password set (or password field is empty).');
+            console.log('Error: User has no password set (or password field is empty).');
             throw new Error("User has no password set (e.g., social login)");
           }
 
@@ -44,20 +42,13 @@ export const authOptions: NextAuthOptions = {
             credentials.password,
             user.password
           );
-          ('Password comparison result:', isValidPassword);
 
           if (!isValidPassword) {
             ('Error: Invalid password.');
             throw new Error("Invalid password");
           }
-
           // Password is correct. Now check for 2FA.
           const profile = await Profile.findOne({ user: user._id });
-          ('Profile found for user:', profile ? 'Yes' : 'No');
-          ('Profile twoFactorEnabled:', profile?.twoFactorEnabled);
-          ('Profile twoFactorConfirmed:', profile?.twoFactorConfirmed);
-          ('Credentials twoFactorCode:', credentials.twoFactorCode);
-
 
           if (profile?.twoFactorEnabled && profile?.twoFactorConfirmed) {
             ('2FA is enabled and confirmed for this user.');
@@ -75,15 +66,14 @@ export const authOptions: NextAuthOptions = {
               token: credentials.twoFactorCode,
               secret: profile.twoFactorSecret,
             });
-            ('2FA code verification result:', isValid2FACode);
 
             if (!isValid2FACode) {
-              ('Error: Invalid 2FA code.');
+              console.log('Error: Invalid 2FA code.');
               throw new Error("Invalid 2FA code");
             }
-            ('2FA code successfully verified.');
+            console.log('2FA code successfully verified.');
           } else {
-            ('2FA not enabled or not confirmed for this user. Proceeding without 2FA check.');
+            console.log('2FA not enabled or not confirmed for this user. Proceeding without 2FA check.');
           }
 
           // If no 2FA required, or 2FA successfully verified, return the user

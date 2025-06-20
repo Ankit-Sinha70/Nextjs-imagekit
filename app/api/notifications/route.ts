@@ -55,7 +55,6 @@ export async function PUT(request: Request) {
       preferences: profile?.notificationPreferences,
     });
   } catch (error) {
-    console.error("Error updating notification preferences:", error);
     return NextResponse.json(
       { message: "Failed to update notification preferences." },
       { status: 500 }

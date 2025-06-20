@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useNotification } from '../Notification';
 import ConfirmationModal from '../models/ConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button"
+import { toast } from 'sonner';
 
 interface Video {
   _id: string;
@@ -18,7 +18,6 @@ export default function VideoList() {
   const [isLoading, setIsLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [videoToDelete, setVideoToDelete] = useState<Video | null>(null);
-  const { showNotification } = useNotification();
 
   useEffect(() => {
     fetchVideos();
@@ -27,14 +26,12 @@ export default function VideoList() {
   const fetchVideos = async () => {
     try {
       const response = await fetch('/api/video');
-      console.log('response', response)
       if (response.ok) {
         const data = await response.json();
-        console.log("Videos received by frontend:", data);
         setVideos(data);
       }
     } catch (error) {
-      showNotification('Failed to fetch videos', 'error');
+      toast.error('Failed to fetch videos');
     } finally {
       setIsLoading(false);
     }
@@ -54,13 +51,13 @@ export default function VideoList() {
       });
 
       if (response.ok) {
-        showNotification('Video deleted successfully', 'success');
+        toast.success('Video deleted successfully');
         setVideos(videos.filter(v => v._id !== videoToDelete._id));
       } else {
         throw new Error('Failed to delete video');
       }
     } catch (error) {
-      showNotification('Failed to delete video', 'error');
+      toast.error('Failed to delete video');
     } finally {
       setDeleteModalOpen(false);
       setVideoToDelete(null);
