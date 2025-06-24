@@ -5,6 +5,7 @@ import ConfirmationModal from '../models/ConfirmationModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button"
 import { toast } from 'sonner';
+import Loader from '../ui/Loader';
 
 interface Video {
   _id: string;
@@ -65,7 +66,11 @@ export default function VideoList() {
   };
 
   if (isLoading) {
-    return <div>Loading videos...</div>;
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center dark:bg-gray-800 dark:border-gray-700">
+        <Loader message="Loading videos..." />
+      </div>
+    );
   }
 
   return (
@@ -79,7 +84,7 @@ export default function VideoList() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow overflow-hidden"
+              className="bg-white rounded-lg shadow overflow-hidden border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-md dark:shadow-gray-900"
             >
               <video
                 controls
@@ -87,13 +92,13 @@ export default function VideoList() {
                 src={video.url}
               />
               <div className="p-4">
-                <h3 className="font-semibold">{video.title}</h3>
-                <p className="text-sm text-gray-500">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{video.title}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-300">
                   {new Date(video.createdAt).toLocaleDateString()}
                 </p>
                 <Button
                   onClick={() => handleDeleteClick(video)}
-                  className="mt-2 rounded-lg text-white hover:text-gray-100 text-sm font-medium"
+                  className="mt-2 rounded-lg text-white text-sm font-medium bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
                 >
                   Delete
                 </Button>

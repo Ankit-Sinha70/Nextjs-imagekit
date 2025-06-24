@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Palette, Moon, Sun, Monitor, Eye, EyeOff } from "lucide-react";
+import { Palette, Moon, Sun, Monitor } from "lucide-react";
 import { useNotification } from "../Notification";
 import { useTheme } from "next-themes";
+import Loader from "../ui/Loader";
 
 interface ThemeOption {
   id: string;
@@ -157,13 +157,13 @@ export default function AppearanceSettings() {
   if (isLoading) {
     return (
       <div className="rounded-lg shadow-sm border border-gray-100 p-6 text-center text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
-        Loading appearance settings...
+        <Loader/>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 bg-white dark:bg-gray-950 transition-colors duration-300 text-gray-900 dark:text-gray-100 dark:!text-gray-100 debug-theme-applied">
+    <div className="space-y-6 bg-white dark:bg-gray-950 rounded-lg transition-colors duration-300 text-gray-900 dark:!text-gray-100 debug-theme-applied">
       {/* Theme Selection */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
         <div className="flex items-center mb-6">

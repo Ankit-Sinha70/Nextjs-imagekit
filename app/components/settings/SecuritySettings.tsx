@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Lock, Shield, Key, Smartphone, Eye, EyeOff } from "lucide-react";
 import { useNotification } from "../Notification";
 import { toast } from "sonner";
+import Loader from "../ui/Loader";
 
 export default function SecuritySettings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -229,25 +230,25 @@ export default function SecuritySettings() {
 
   if (isLoadingInitial) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
-        Loading security settings...
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
+        <Loader/>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="space-y-6 bg-white dark:bg-gray-950 rounded-lg text-gray-900 dark:text-gray-100">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center mb-6">
           <Lock className="w-6 h-6 text-blue-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Change Password
           </h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Current Password
             </label>
             <div className="relative">
@@ -258,13 +259,13 @@ export default function SecuritySettings() {
                 onChange={(e) =>
                   setPasswords({ ...passwords, current: e.target.value })
                 }
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 placeholder="Enter current password"
                 disabled={isLoadingPassword}
               />
               <button
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={isLoadingPassword}
               >
                 {showCurrentPassword ? (
@@ -277,7 +278,7 @@ export default function SecuritySettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               New Password
             </label>
             <div className="relative">
@@ -288,13 +289,13 @@ export default function SecuritySettings() {
                 onChange={(e) =>
                   setPasswords({ ...passwords, new: e.target.value })
                 }
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 placeholder="Enter new password"
                 disabled={isLoadingPassword}
               />
               <button
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={isLoadingPassword}
               >
                 {showNewPassword ? (
@@ -307,7 +308,7 @@ export default function SecuritySettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
               Confirm New Password
             </label>
             <div className="relative">
@@ -318,13 +319,13 @@ export default function SecuritySettings() {
                 onChange={(e) =>
                   setPasswords({ ...passwords, confirm: e.target.value })
                 }
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 placeholder="Confirm new password"
                 disabled={isLoadingPassword}
               />
               <button
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 disabled={isLoadingPassword}
               >
                 {showConfirmPassword ? (
@@ -348,15 +349,15 @@ export default function SecuritySettings() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Shield className="w-6 h-6 text-green-600 mr-3" />
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Two-Factor Authentication
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-300">
                 Add an extra layer of security to your account
               </p>
             </div>
@@ -378,15 +379,15 @@ export default function SecuritySettings() {
           </button>
         </div>
 
-        <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-          <Smartphone className="w-5 h-5 text-gray-600 mr-3" />
+        <div className="flex items-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
+          <Smartphone className="w-5 h-5 text-gray-600 mr-3 dark:text-gray-300" />
           <div>
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
               {twoFactorEnabled
                 ? "Two-factor authentication is enabled"
                 : "Two-factor authentication is disabled"}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-300">
               {twoFactorEnabled
                 ? "Your account is protected with an additional security layer"
                 : "Enable two-factor authentication for enhanced security"}
@@ -400,12 +401,12 @@ export default function SecuritySettings() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+            className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800"
           >
-            <h4 className="text-md font-semibold text-blue-800 mb-3">
+            <h4 className="text-md font-semibold text-blue-800 mb-3 dark:text-blue-100">
               Setup Two-Factor Authentication
             </h4>
-            <p className="text-sm text-blue-700 mb-4">
+            <p className="text-sm text-blue-700 mb-4 dark:text-blue-300">
               Scan the QR code below with your favorite authenticator app (e.g.,
               Google Authenticator, Authy). Then, enter the 6-digit code
               provided by the app to verify.
@@ -416,12 +417,12 @@ export default function SecuritySettings() {
                 alt="2FA QR Code"
                 width={180}
                 height={180}
-                className="rounded-md shadow-md bg-white p-2"
+                className="rounded-md shadow-md bg-white p-2 dark:bg-gray-900"
               />
-              <p className="text-xs text-gray-600 mt-2">
+              <p className="text-xs text-gray-600 mt-2 dark:text-gray-400">
                 If you cannot scan, manually enter this secret key:
               </p>
-              <code className="text-xs font-mono bg-gray-100 p-1 rounded break-all">
+              <code className="text-xs font-mono bg-gray-100 p-1 rounded break-all dark:bg-gray-700 dark:text-gray-100">
                 {twoFactorSecret}
               </code>
             </div>
@@ -429,7 +430,7 @@ export default function SecuritySettings() {
             <div className="w-full max-w-sm mx-auto">
               <label
                 htmlFor="2fa-code"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
               >
                 Enter 6-digit Code
               </label>
@@ -439,7 +440,7 @@ export default function SecuritySettings() {
                   type="text"
                   value={twoFactorCodeInput}
                   onChange={(e) => setTwoFactorCodeInput(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono tracking-widest"
+                  className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono tracking-widest dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                   placeholder="------"
                   maxLength={6}
                   disabled={isLoadingTwoFactor}
@@ -462,10 +463,10 @@ export default function SecuritySettings() {
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center mb-6">
           <Smartphone className="w-6 h-6 text-purple-600 mr-3" />
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Active Sessions
           </h3>
         </div>
@@ -474,29 +475,29 @@ export default function SecuritySettings() {
           {activeSessions.map((session) => (
             <div
               key={session.id}
-              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg dark:border-gray-700"
             >
               <div className="flex items-center">
                 <div className="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {session.device}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-300">
                     {session.location} • {session.lastActive}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 {session.current && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/20 dark:text-blue-300">
                     Current
                   </span>
                 )}
                 {!session.current && (
                   <button
                     onClick={() => handleRevokeSession(session.id)}
-                    className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors"
+                    className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/40"
                   >
                     Revoke
                   </button>

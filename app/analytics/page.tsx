@@ -65,17 +65,17 @@ export default function Analytics() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+      className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-none"
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <p className={`text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+          <p className={`text-sm ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {change >= 0 ? '+' : ''}{change}% from last month
           </p>
         </div>
-        <div className="text-3xl text-blue-600">{icon}</div>
+        <div className="text-3xl text-blue-600 dark:text-blue-400">{icon}</div>
       </div>
     </motion.div>
   );
@@ -83,14 +83,14 @@ export default function Analytics() {
   return (
     <DashboardLayout>
       <main className="max-w-7xl mx-auto">
-        <div className=" sm:px-0">
+        <div className="sm:px-0 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm">
           <DashboardSection title="Analytics Overview">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Analytics Dashboard</h2>
               <select 
                 value={selectedPeriod} 
                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="border border-gray-300 rounded-md px-3 py-2 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
               >
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -139,9 +139,9 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+                className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-none"
               >
-                <h3 className="text-lg font-semibold mb-4">Sales & Revenue Trends</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Sales & Revenue Trends</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={salesData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -161,9 +161,9 @@ export default function Analytics() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+                  className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-none"
                 >
-                  <h3 className="text-lg font-semibold mb-4">User Distribution</h3>
+                  <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">User Distribution</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -189,9 +189,9 @@ export default function Analytics() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+                  className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-none"
                 >
-                  <h3 className="text-lg font-semibold mb-4">Website Traffic</h3>
+                  <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Website Traffic</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={trafficData}>
                       <CartesianGrid strokeDasharray="3 3" />
@@ -211,9 +211,9 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
-                className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+                className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-none"
               >
-                <h3 className="text-lg font-semibold mb-4">Conversion Rate by Day</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Conversion Rate by Day</h3>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={conversionData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -232,9 +232,9 @@ export default function Analytics() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
-                className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+                className="bg-white rounded-lg shadow-md p-6 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:shadow-none"
               >
-                <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Recent Activity</h3>
                 <div className="space-y-4">
                   {[
                     { action: 'New order placed', user: 'John Doe', time: '2 minutes ago', amount: '$299' },
@@ -242,17 +242,17 @@ export default function Analytics() {
                     { action: 'User registered', user: 'Mike Johnson', time: '10 minutes ago', amount: '-' },
                     { action: 'Product review', user: 'Sarah Wilson', time: '15 minutes ago', amount: '5 stars' },
                   ].map((activity, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-700">
                       <div className="flex items-center space-x-3">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <div>
-                          <p className="font-medium">{activity.action}</p>
-                          <p className="text-sm text-gray-600">by {activity.user}</p>
+                          <p className="font-medium dark:text-gray-100">{activity.action}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">by {activity.user}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-gray-600">{activity.time}</p>
-                        <p className="font-medium">{activity.amount}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">{activity.time}</p>
+                        <p className="font-medium dark:text-gray-100">{activity.amount}</p>
                       </div>
                     </div>
                   ))}

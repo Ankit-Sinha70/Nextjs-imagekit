@@ -73,10 +73,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-xl w-full space-y-8 p-10 bg-white rounded-2xl shadow-2xl transform transition-all duration-300 hover:scale-[1.02]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-950">
+      <div className="max-w-xl w-full space-y-8 p-10 bg-white rounded-2xl shadow-2xl transform transition-all duration-300 hover:scale-[1.02] dark:bg-gray-800 dark:shadow-none dark:hover:shadow-lg dark:hover:shadow-gray-900">
         <div className="animate-fade-in">
-          <h2 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h2 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">
             Sign in to your account
           </h2>
         </div>
@@ -85,13 +85,13 @@ export default function Login() {
             {!showTwoFactorInput && (
               <>
                 <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Email address</label>
                   <input
                     id="email"
                     name="email"
                     type="email"
                     required
-                    className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
                     placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -99,13 +99,13 @@ export default function Login() {
                   />
                 </div>
                 <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Password</label>
                   <input
                     id="password"
                     name="password"
                     type="password"
                     required
-                    className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
+                    className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -117,13 +117,13 @@ export default function Login() {
 
             {showTwoFactorInput && (
               <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                <label htmlFor="two-factor-code" className="block text-sm font-medium text-gray-700 mb-2">Two-Factor Code</label>
+                <label htmlFor="two-factor-code" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Two-Factor Code</label>
                 <input
                   id="two-factor-code"
                   name="two-factor-code"
                   type="text"
                   required
-                  className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center text-lg font-mono tracking-widest"
+                  className="appearance-none rounded-xl relative block w-full px-4 py-3 border-2 border-gray-200 placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-center text-lg font-mono tracking-widest dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-500 dark:text-gray-100 dark:focus:ring-blue-400"
                   placeholder="------"
                   maxLength={6}
                   value={twoFactorCode}
@@ -154,7 +154,7 @@ export default function Login() {
             </button>
           </div>
         </form>
-        <div className="text-center text-sm text-gray-600">
+        <div className="text-center text-sm text-gray-600 dark:text-gray-300">
           Not a member?{' '}
           <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
             Sign up now

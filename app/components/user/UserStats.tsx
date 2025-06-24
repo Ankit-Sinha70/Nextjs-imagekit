@@ -67,20 +67,22 @@ export default function UserStats() {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
           }}
           className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300
-                     border border-gray-100 hover:border-gray-200"
+                     border border-gray-100 hover:border-gray-200
+                     dark:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 dark:shadow-md dark:hover:shadow-lg dark:shadow-gray-900 dark:hover:shadow-gray-950"
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.title}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1 dark:text-gray-100">{stat.value}</p>
             </div>
-            <div className={`p-3 bg-gradient-to-br from-${stat.color}-50 to-${stat.color}-100 rounded-full`}>
-              <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+            <div className={`p-3 bg-gradient-to-br from-${stat.color}-50 to-${stat.color}-100 rounded-full
+                         dark:from-${stat.color}-900/40 dark:to-${stat.color}-900/60`}>
+              <stat.icon className={`w-6 h-6 text-${stat.color}-600 dark:text-${stat.color}-400`} />
             </div>
           </div>
           <div className="mt-4 flex items-center">
             <span className={`text-sm font-medium ${
-              stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+              stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}>
               {stat.change}
             </span>

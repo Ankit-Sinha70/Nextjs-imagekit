@@ -96,7 +96,7 @@ export default function Settings() {
   return (
     <DashboardLayout>
       <main className="max-w-7xl mx-auto">
-        <div className="">
+        <div className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded-lg shadow-sm p-6">
           {/* Settings Navigation Menu */}
           <SettingsNavigation
             sections={sections}
@@ -105,7 +105,7 @@ export default function Settings() {
           />
 
           {/* Active Section Content */}
-          <div className="min-h-[600px]">
+          <div className="min-h-[600px] mt-6">
             <AnimatePresence mode="wait">
               {renderActiveSection()}
             </AnimatePresence>

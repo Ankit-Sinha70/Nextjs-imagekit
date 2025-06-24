@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import Loader from '../ui/Loader';
 
 export default function VideoUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -71,7 +72,7 @@ export default function VideoUpload() {
         />
       </label>
       {isUploading && (
-        <div className="mt-2 text-sm text-gray-500">Uploading...</div>
+        <div className="mt-2 text-sm text-gray-500"> <Loader message='Uploading Video...'/></div>
       )}
     </div>
   );
