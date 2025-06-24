@@ -27,7 +27,8 @@ export default function Sidebar() {
   return (
     <motion.aside
       className={`
-        bg-white bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl
+        bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl
+        dark:bg-gray-900 dark:text-gray-100 dark:shadow-none /* Dark mode styles for background and text */
         transition-all duration-300 ease-in-out
         h-screen fixed top-0 z-50 overflow-hidden /* Mobile positioning */
 
@@ -39,7 +40,8 @@ export default function Sidebar() {
     >
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100 transition-colors"
+        className="absolute -right-3 top-6 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100 transition-colors
+        dark:bg-gray-700 dark:hover:bg-gray-600 dark:shadow-none" /* Dark mode styles for button */
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -48,9 +50,9 @@ export default function Sidebar() {
             key={isOpen ? 'close' : 'open'}
           >
             {isOpen ? (
-              <ChevronLeftIcon className="w-4 h-4 text-indigo-600" />
+              <ChevronLeftIcon className="w-4 h-4 text-indigo-600 dark:text-blue-400" /> /* Dark mode icon color */
             ) : (
-              <ChevronRightIcon className="w-4 h-4 text-indigo-600" />
+              <ChevronRightIcon className="w-4 h-4 text-indigo-600 dark:text-blue-400" /> /* Dark mode icon color */
             )}
           </motion.div>
         </AnimatePresence>
@@ -60,7 +62,7 @@ export default function Sidebar() {
         <AnimatePresence mode="wait">
           {isOpen && (
             <motion.h1
-              className="text-2xl font-bold text-white"
+              className="text-2xl font-bold text-white dark:text-gray-100" /* Dark mode text color */
             >
               Dashboard
             </motion.h1>
@@ -75,8 +77,12 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.path}
-              className={`flex items-center px-6 py-3 text-white/80 hover:bg-white/10 transition-colors duration-200 ${
-                isActive ? 'bg-white/20 text-white' : ''
+              className={`flex items-center px-6 py-3 text-white/80 hover:bg-white/10 transition-colors duration-200
+              dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 /* Dark mode link text & hover */
+              ${
+                isActive
+                  ? 'bg-white/20 text-white dark:bg-blue-600 dark:text-white' /* Dark mode active link */
+                  : ''
               }`}
             >
               <div className="flex items-center">

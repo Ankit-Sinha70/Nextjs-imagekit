@@ -1,49 +1,80 @@
-import { connectToDatabase } from '@/lib/db';
-import Profile, { IAppearanceSettings, IProfile } from '@/models/Profile';
-import { NextResponse } from 'next/server';
+import { connectToDatabase } from "@/lib/db";
+import Profile, { IAppearanceSettings, IProfile } from "@/models/Profile";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import User from "@/models/User";
 
-// GET /api/appearance - Fetches the user's appearance settings
 export async function GET() {
   await connectToDatabase();
 
   try {
-    let profile: IProfile | null = await Profile.findOne({});
+    const session = await getServerSession(authOptions);
 
-    // If no profile exists, create one with default appearance settings
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+    let profile: IProfile | null = await Profile.findOne({ user: userId });
+
     if (!profile) {
+      const user = await User.findById(userId);
+      if (!user) {
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 404 }
+        );
+      }
+
       profile = await Profile.create({
-        firstName: 'Default',
-        lastName: 'User',
-        email: `default-user-${Date.now()}@example.com`,
-        // Other default fields will be set by schema defaults
+        user: userId,
+        email: user.email,
+        firstName: session.user.name?.split(" ")[0] || "User",
+        lastName: session.user.name?.split(" ").slice(1).join(" ") || "",
       });
     }
 
-    // Return only the appearanceSettings
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
     return NextResponse.json(profile?.appearanceSettings);
-
   } catch (error) {
     console.error("Error fetching appearance settings:", error);
-    return NextResponse.json({ message: 'Failed to fetch appearance settings.' }, { status: 500 });
+    return NextResponse.json(
+      { message: "Failed to fetch appearance settings." },
+      { status: 500 }
+    );
   }
 }
 
-// PUT /api/appearance - Updates the user's appearance settings
 export async function PUT(request: Request) {
   await connectToDatabase();
 
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
     const updatedSettings: IAppearanceSettings = await request.json();
 
-    let profile: IProfile | null = await Profile.findOne({});
+    let profile: IProfile | null = await Profile.findOne({ user: userId });
 
     if (!profile) {
-      // If no profile exists, create one and then update its settings
+      const user = await User.findById(userId);
+      if (!user) {
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 404 }
+        );
+      }
+
       profile = await Profile.create({
-        firstName: 'New',
-        lastName: 'User',
-        email: `temp-user-${Date.now()}@example.com`,
+        user: userId,
+        email: user.email,
+        firstName: session.user.name?.split(" ")[0] || "New",
+        lastName: session.user.name?.split(" ").slice(1).join(" ") || "User",
         appearanceSettings: updatedSettings, // Set received settings
       });
     } else {
@@ -52,19 +83,29 @@ export async function PUT(request: Request) {
       profile.appearanceSettings = {
         ...profile.appearanceSettings, // Keep existing if not provided
         theme: updatedSettings.theme || profile.appearanceSettings.theme,
-        fontSize: updatedSettings.fontSize || profile.appearanceSettings.fontSize,
-        compactMode: updatedSettings.compactMode ?? profile.appearanceSettings.compactMode, // Handle boolean
-        showAnimations: updatedSettings.showAnimations ?? profile.appearanceSettings.showAnimations, // Handle boolean
-        accentColor: updatedSettings.accentColor || profile.appearanceSettings.accentColor,
+        fontSize:
+          updatedSettings.fontSize || profile.appearanceSettings.fontSize,
+        compactMode:
+          updatedSettings.compactMode ?? profile.appearanceSettings.compactMode,
+        showAnimations:
+          updatedSettings.showAnimations ??
+          profile.appearanceSettings.showAnimations,
+        accentColor:
+          updatedSettings.accentColor || profile.appearanceSettings.accentColor,
       };
       await profile.save();
     }
 
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    return NextResponse.json({ message: 'Appearance settings updated successfully!', settings: profile?.appearanceSettings });
+    return NextResponse.json({
+      message: "Appearance settings updated successfully!",
+      settings: profile?.appearanceSettings,
+    });
   } catch (error) {
-    console.error("Error updating appearance settings:", error);
-    return NextResponse.json({ message: 'Failed to update appearance settings.' }, { status: 500 });
+    return NextResponse.json(
+      { message: "Failed to update appearance settings." },
+      { status: 500 }
+    );
   }
-} 
+}

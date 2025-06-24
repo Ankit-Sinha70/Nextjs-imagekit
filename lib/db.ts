@@ -28,7 +28,6 @@ export async function connectToDatabase() {
     ('Creating new database connection promise...');
     const opts = {
       bufferCommands: false,
-      // Add more options here if needed, e.g., useNewUrlParser: true, useUnifiedTopology: true
     };
 
     cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
@@ -37,7 +36,7 @@ export async function connectToDatabase() {
     }).catch((error) => {
       console.error('MongoDB connection error:', error);
       cached.promise = null; // Reset promise on failure to allow retry
-      throw error; // Re-throw to propagate the error
+      throw error; 
     });
   }
 
@@ -52,5 +51,3 @@ export async function connectToDatabase() {
 
   return cached.conn;
 }
-
-// Removed User Schema definition from here. It is handled in models/Profile.ts if needed.

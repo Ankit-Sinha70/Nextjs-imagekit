@@ -1,4 +1,5 @@
 module.exports = {
+  darkMode: 'class',
   theme: {
     extend: {
       boxShadow: {
@@ -16,5 +17,5 @@ module.exports = {
       }
     },
   },
-  // ... rest of your config
+  
 } 

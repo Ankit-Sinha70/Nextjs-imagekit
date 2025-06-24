@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Palette, Moon, Sun, Monitor, Eye, EyeOff } from "lucide-react";
 import { useNotification } from "../Notification";
+import { useTheme } from "next-themes";
 
 interface ThemeOption {
   id: string;
@@ -14,7 +15,7 @@ interface ThemeOption {
 }
 
 interface AppearanceSettingsState {
-  theme: "light" | "dark" | "auto";
+  theme: "light" | "dark" | "system";
   fontSize: "small" | "medium" | "large";
   compactMode: boolean;
   showAnimations: boolean;
@@ -22,8 +23,9 @@ interface AppearanceSettingsState {
 }
 
 export default function AppearanceSettings() {
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<AppearanceSettingsState>({
-    theme: "light",
+    theme: (theme as "light" | "dark" | "system") || "light",
     fontSize: "medium",
     compactMode: false,
     showAnimations: true,
@@ -38,7 +40,7 @@ export default function AppearanceSettings() {
       name: "Light",
       description: "Clean and bright interface",
       icon: Sun,
-      preview: "bg-white border-gray-200",
+      preview: "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700",
     },
     {
       id: "dark",
@@ -48,11 +50,12 @@ export default function AppearanceSettings() {
       preview: "bg-gray-900 border-gray-700",
     },
     {
-      id: "auto",
+      id: "system",
       name: "Auto",
       description: "Follows your system preference",
       icon: Monitor,
-      preview: "bg-gradient-to-r from-white to-gray-100 border-gray-300",
+      preview:
+        "bg-gradient-to-r from-white to-gray-100 border-gray-300 dark:from-gray-800 dark:to-gray-700 dark:border-gray-600",
     },
   ];
 
@@ -73,7 +76,9 @@ export default function AppearanceSettings() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data: AppearanceSettingsState = await response.json();
+        console.log("data", data);
         setSettings(data);
+        setTheme(data.theme);
       } catch (error: any) {
         console.error("Failed to fetch appearance settings:", error);
         showNotification("Failed to load appearance settings.", "error");
@@ -83,6 +88,15 @@ export default function AppearanceSettings() {
     };
     fetchSettings();
   }, []);
+
+  useEffect(() => {
+    if (theme && settings.theme !== theme) {
+      setSettings((prev) => ({
+        ...prev,
+        theme: theme as "light" | "dark" | "system",
+      }));
+    }
+  }, [theme, settings.theme]);
 
   const sendUpdateToApi = async (newSettings: AppearanceSettingsState) => {
     try {
@@ -106,9 +120,10 @@ export default function AppearanceSettings() {
     }
   };
 
-  const handleThemeChange = (newTheme: "light" | "dark" | "auto") => {
+  const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     const updatedSettings = { ...settings, theme: newTheme };
     setSettings(updatedSettings);
+    setTheme(newTheme);
     sendUpdateToApi(updatedSettings);
   };
 
@@ -141,21 +156,23 @@ export default function AppearanceSettings() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500">
+      <div className="rounded-lg shadow-sm border border-gray-100 p-6 text-center text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
         Loading appearance settings...
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white dark:bg-gray-950 transition-colors duration-300 text-gray-900 dark:text-gray-100 dark:!text-gray-100 debug-theme-applied">
       {/* Theme Selection */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 dark:text-white">
         <div className="flex items-center mb-6">
           <Palette className="w-6 h-6 text-purple-600 mr-3" />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Theme</h3>
-            <p className="text-sm text-gray-500">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Theme
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-300 ">
               Choose your preferred appearance
             </p>
           </div>
@@ -166,22 +183,26 @@ export default function AppearanceSettings() {
             <div
               key={option.id}
               onClick={() =>
-                handleThemeChange(option.id as "light" | "dark" | "auto")
+                handleThemeChange(option.id as "light" | "dark" | "system")
               }
               className={`relative cursor-pointer border-2 rounded-lg p-4 transition-all ${
-                settings.theme === option.id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                theme === option.id
+                  ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20"
+                  : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600 dark:bg-gray-700"
               }`}
             >
               <div
                 className={`w-full h-20 rounded ${option.preview} mb-3 flex items-center justify-center`}
               >
-                <option.icon className="w-6 h-6 text-gray-600" />
+                <option.icon className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </div>
-              <h4 className="font-medium text-gray-900">{option.name}</h4>
-              <p className="text-sm text-gray-500">{option.description}</p>
-              {settings.theme === option.id && (
+              <h4 className="font-medium text-gray-900 dark:text-gray-100">
+                {option.name}
+              </h4>
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                {option.description}
+              </p>
+              {theme === option.id && (
                 <div className="absolute top-2 right-2 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
@@ -192,10 +213,14 @@ export default function AppearanceSettings() {
       </div>
 
       {/* Font Size */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">Font Size</h4>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+        <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-gray-100">
+          Font Size
+        </h4>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-500">Small</span>
+          <span className="text-sm text-gray-500 dark:text-gray-300">
+            Small
+          </span>
           <div className="flex-1">
             <input
               type="range"
@@ -217,13 +242,15 @@ export default function AppearanceSettings() {
                 ];
                 handleFontSizeChange(sizes[parseInt(e.target.value)]);
               }}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider dark:bg-gray-700"
             />
           </div>
-          <span className="text-sm text-gray-500">Large</span>
+          <span className="text-sm text-gray-500 dark:text-gray-300">
+            Large
+          </span>
         </div>
         <div className="mt-2 text-center">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             Current:{" "}
             {settings.fontSize.charAt(0).toUpperCase() +
               settings.fontSize.slice(1)}
@@ -232,8 +259,8 @@ export default function AppearanceSettings() {
       </div>
 
       {/* Accent Color */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+        <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-gray-100">
           Accent Color
         </h4>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
@@ -243,17 +270,17 @@ export default function AppearanceSettings() {
               onClick={() => handleAccentColorChange(color.id)}
               className={`relative p-4 rounded-lg border-2 transition-all ${
                 settings.accentColor === color.id
-                  ? "border-gray-900 scale-110"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-gray-900 scale-110 dark:border-gray-100 dark:bg-gray-700"
+                  : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600 dark:bg-gray-800"
               }`}
             >
               <div className={`w-full h-8 rounded ${color.class}`}></div>
-              <span className="text-xs text-gray-600 mt-1 block">
+              <span className="text-xs text-gray-600 mt-1 block dark:text-gray-300">
                 {color.name}
               </span>
               {settings.accentColor === color.id && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-900 rounded-full flex items-center justify-center dark:bg-gray-100">
+                  <div className="w-2 h-2 bg-white rounded-full dark:bg-gray-900"></div>
                 </div>
               )}
             </button>
@@ -262,17 +289,17 @@ export default function AppearanceSettings() {
       </div>
 
       {/* Display Options */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+        <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-gray-100">
           Display Options
         </h4>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h5 className="text-sm font-medium text-gray-900">
+              <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Compact Mode
               </h5>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-300">
                 Reduce spacing for more content
               </p>
             </div>
@@ -283,16 +310,16 @@ export default function AppearanceSettings() {
                 onChange={handleCompactModeToggle}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
             </label>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <h5 className="text-sm font-medium text-gray-900">
+              <h5 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Show Animations
               </h5>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-300">
                 Enable smooth transitions and effects
               </p>
             </div>
@@ -303,22 +330,24 @@ export default function AppearanceSettings() {
                 onChange={handleAnimationsToggle}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
             </label>
           </div>
         </div>
       </div>
 
       {/* Preview */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h4 className="text-md font-semibold text-gray-900 mb-4">Preview</h4>
+      <div
+        className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700`}
+      >
+        <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-gray-100">
+          Preview
+        </h4>
         <div
-          className={`p-4 rounded-lg border ${
-            settings.theme === "dark" ? "bg-gray-900 text-white" : "bg-gray-50"
-          } {{ new_font_size_class }}`}
+          className={`p-4 rounded-lg border dark:bg-gray-900 dark:border-gray-700 bg-gray-50`}
         >
           <div className="flex items-center justify-between mb-3">
-            <h5 className="font-medium">Sample Card</h5>
+            <h5 className="font-medium dark:text-gray-100">Sample Card</h5>
             <button
               className={`px-3 py-1 rounded text-white text-sm ${
                 settings.accentColor === "blue"
@@ -337,7 +366,7 @@ export default function AppearanceSettings() {
               Button
             </button>
           </div>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             This is how your interface will look with the current settings.
           </p>
         </div>

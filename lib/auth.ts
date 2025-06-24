@@ -13,28 +13,33 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
-        twoFactorCode: { label: "Two-Factor Code", type: "text", required: false },
+        twoFactorCode: {
+          label: "Two-Factor Code",
+          type: "text",
+          required: false,
+        },
       },
       async authorize(credentials) {
-
         if (!credentials?.email || !credentials?.password) {
-          ('Error: Missing email or password.');
+          ("Error: Missing email or password.");
           throw new Error("Missing email or password");
         }
 
         try {
           await connectToDatabase();
-          ('Database connected.');
+          ("Database connected.");
 
           const user = await User.findOne({ email: credentials.email });
 
           if (!user) {
-            console.log('Error: No user found with this email.');
+            console.log("Error: No user found with this email.");
             throw new Error("No user found with this email");
           }
 
           if (!user.password) {
-            console.log('Error: User has no password set (or password field is empty).');
+            console.log(
+              "Error: User has no password set (or password field is empty)."
+            );
             throw new Error("User has no password set (e.g., social login)");
           }
 
@@ -44,22 +49,21 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isValidPassword) {
-            ('Error: Invalid password.');
+            ("Error: Invalid password.");
             throw new Error("Invalid password");
           }
           // Password is correct. Now check for 2FA.
           const profile = await Profile.findOne({ user: user._id });
-
           if (profile?.twoFactorEnabled && profile?.twoFactorConfirmed) {
-            ('2FA is enabled and confirmed for this user.');
+            ("2FA is enabled and confirmed for this user.");
             if (!credentials.twoFactorCode) {
-              ('Error: 2FA enabled but no code provided. Throwing TwoFactorRequired.');
-              throw new Error("TwoFactorRequired"); // Signal frontend to ask for code
+              ("Error: 2FA enabled but no code provided. Throwing TwoFactorRequired.");
+              throw new Error("TwoFactorRequired");
             }
 
             if (!profile.twoFactorSecret) {
-                ('Error: 2FA secret missing for enabled account.');
-                throw new Error("2FA secret missing for enabled account.");
+              ("Error: 2FA secret missing for enabled account.");
+              throw new Error("2FA secret missing for enabled account.");
             }
 
             const isValid2FACode = authenticator.verify({
@@ -68,16 +72,17 @@ export const authOptions: NextAuthOptions = {
             });
 
             if (!isValid2FACode) {
-              console.log('Error: Invalid 2FA code.');
+              console.log("Error: Invalid 2FA code.");
               throw new Error("Invalid 2FA code");
             }
-            console.log('2FA code successfully verified.');
+            console.log("2FA code successfully verified.");
           } else {
-            console.log('2FA not enabled or not confirmed for this user. Proceeding without 2FA check.');
+            console.log(
+              "2FA not enabled or not confirmed for this user. Proceeding without 2FA check."
+            );
           }
-
           // If no 2FA required, or 2FA successfully verified, return the user
-          ('User successfully authorized. Returning user object.');
+          ("User successfully authorized. Returning user object.");
           return {
             id: user._id.toString(),
             email: user.email,

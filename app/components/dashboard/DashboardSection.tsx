@@ -14,7 +14,7 @@ export default function DashboardSection({ title, children }: DashboardSectionPr
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="bg-white rounded-lg shadow p-6 mb-6"
+      className="bg-white dark:bg-gray-800 dark:text-gray-100 text-black rounded-lg border border-gray-200 shadow p-6 mb-6"
     >
       <motion.h2
         initial={{ x: -20, opacity: 0 }}
