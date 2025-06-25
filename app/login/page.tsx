@@ -1,18 +1,18 @@
 "use client";
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useNotification } from '../components/Notification';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useNotification } from "../components/Notification";
 import Link from "next/link";
-import { signIn } from 'next-auth/react';
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactorInput, setShowTwoFactorInput] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState("");
   const router = useRouter();
-  const { showNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,34 +20,36 @@ export default function Login() {
 
     try {
       if (!showTwoFactorInput) {
-        const result = await signIn('credentials', {
+        const result = await signIn("credentials", {
           redirect: false,
           email,
           password,
         });
 
         if (result?.error) {
-          if (result.error === 'TwoFactorRequired') {
+          if (result.error === "TwoFactorRequired") {
             setShowTwoFactorInput(true);
-            showNotification('Two-factor authentication required. Please enter your code.', 'info');
+            toast(
+              "Two-factor authentication required. Please enter your code."
+            );
           } else {
-            showNotification(result.error, 'error');
+            toast(result.error);
           }
         } else if (result?.ok) {
-          showNotification('Login successful!', 'success');
-          router.push('/dashboard');
+          toast("Login successful!");
+          router.push("/dashboard");
         }
       } else {
-        const response = await fetch('/api/2fa/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/2fa/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, token: twoFactorCode }),
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          const finalSignInResult = await signIn('credentials', {
+          const finalSignInResult = await signIn("credentials", {
             redirect: false,
             email,
             password,
@@ -55,24 +57,26 @@ export default function Login() {
           });
 
           if (finalSignInResult?.ok) {
-            showNotification('Login successful with 2FA!', 'success');
-            router.push('/dashboard');
+            toast("Login successful with 2FA!");
+            router.push("/dashboard");
           } else {
-            showNotification(finalSignInResult?.error || 'Login failed after 2FA verification.', 'error');
+            toast(
+              finalSignInResult?.error || "Login failed after 2FA verification."
+            );
           }
         } else {
-          showNotification(data.message || 'Invalid 2FA code. Please try again.', 'error');
+          toast(data.message || "Invalid 2FA code. Please try again.");
         }
       }
     } catch (error: unknown) {
-      let errorMessage = 'An unexpected error occurred during login.';
+      let errorMessage = "An unexpected error occurred during login.";
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (typeof error === 'string') {
+      } else if (typeof error === "string") {
         errorMessage = error;
       }
-      console.error('Login error:', errorMessage, error);
-      showNotification(errorMessage, 'error');
+      console.error("Login error:", errorMessage, error);
+      toast(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +95,12 @@ export default function Login() {
             {!showTwoFactorInput && (
               <>
                 <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Email address</label>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+                  >
+                    Email address
+                  </label>
                   <input
                     id="email"
                     name="email"
@@ -105,7 +114,12 @@ export default function Login() {
                   />
                 </div>
                 <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Password</label>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+                  >
+                    Password
+                  </label>
                   <input
                     id="password"
                     name="password"
@@ -123,7 +137,12 @@ export default function Login() {
 
             {showTwoFactorInput && (
               <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                <label htmlFor="two-factor-code" className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">Two-Factor Code</label>
+                <label
+                  htmlFor="two-factor-code"
+                  className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+                >
+                  Two-Factor Code
+                </label>
                 <input
                   id="two-factor-code"
                   name="two-factor-code"
@@ -148,21 +167,42 @@ export default function Login() {
             >
               {isLoading ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
-                  {showTwoFactorInput ? 'Verifying 2FA...' : 'Signing in...'}
+                  {showTwoFactorInput ? "Verifying 2FA..." : "Signing in..."}
                 </span>
+              ) : showTwoFactorInput ? (
+                "Verify 2FA & Sign in"
               ) : (
-                showTwoFactorInput ? 'Verify 2FA & Sign in' : 'Sign in'
+                "Sign in"
               )}
             </button>
           </div>
         </form>
         <div className="text-center text-sm text-gray-600 dark:text-gray-300">
-          Not a member?{' '}
-          <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
+          Not a member?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
             Sign up now
           </Link>
         </div>

@@ -5,6 +5,8 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useNotification } from "../Notification";
 import LogoutConfirmationModal from "../models/LogoutConfirmationModal";
+import { signOut } from "next-auth/react";
+import { toast } from "sonner";
 
 export default function Navbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -13,7 +15,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const { showNotification } = useNotification();
 
-  // Function to get dynamic title based on current path
   const getPageTitle = () => {
     switch (pathname) {
       case "/dashboard":
@@ -25,7 +26,6 @@ export default function Navbar() {
       case "/dashboard/settings":
         return "Settings";
       default:
-        // Extract title from pathname for other routes
         const path = pathname.split("/").pop();
         return path
           ? path.charAt(0).toUpperCase() + path.slice(1)
@@ -35,20 +35,13 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
+      toast("Logged out successfully");
       setIsLoggingOut(true);
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Logout failed");
-      }
-
-      localStorage.removeItem("token");
-      showNotification("Logged out successfully", "success");
-      router.push("/login");
+      setTimeout(async () => {
+        await signOut({ callbackUrl: "/login", redirect: true });
+      }, 500);
+      localStorage.clear();
+      sessionStorage.clear();
     } catch (error: unknown) {
       let errorMessage = "Error during logout";
       if (error instanceof Error) {
