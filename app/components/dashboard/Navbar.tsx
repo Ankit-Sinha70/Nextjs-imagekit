@@ -11,7 +11,6 @@ import { toast } from "sonner";
 export default function Navbar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const { showNotification } = useNotification();
 
