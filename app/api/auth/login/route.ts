@@ -21,7 +21,6 @@ export async function POST(request: Request) {
     const user = await mongoose.models.User.findOne({ email });
 
     if (!user) {
-      ("User not found");
       return NextResponse.json(
         { message: "Invalid credentials" },
         { status: 401 }
@@ -31,7 +30,7 @@ export async function POST(request: Request) {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      ("Invalid password");
+      // ("Invalid password"); // This line was causing the error
       return NextResponse.json(
         { message: "Invalid credentials" },
         { status: 401 }

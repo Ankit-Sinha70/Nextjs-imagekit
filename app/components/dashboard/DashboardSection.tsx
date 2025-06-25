@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface DashboardSectionProps {
   title: string;
   children: ReactNode;
 }
 
-export default function DashboardSection({ title, children }: DashboardSectionProps) {
+export default function DashboardSection({
+  title,
+  children,
+}: DashboardSectionProps) {
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
@@ -27,4 +30,4 @@ export default function DashboardSection({ title, children }: DashboardSectionPr
       {children}
     </motion.div>
   );
-} 
+}

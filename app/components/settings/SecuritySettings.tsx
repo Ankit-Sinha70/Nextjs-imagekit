@@ -6,6 +6,7 @@ import { Lock, Shield, Key, Smartphone, Eye, EyeOff } from "lucide-react";
 import { useNotification } from "../Notification";
 import { toast } from "sonner";
 import Loader from "../ui/Loader";
+import Image from "next/image";
 
 export default function SecuritySettings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -45,7 +46,6 @@ export default function SecuritySettings() {
   const [isLoadingPassword, setIsLoadingPassword] = useState(false);
   const [isLoadingTwoFactor, setIsLoadingTwoFactor] = useState(false);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
   // New states for 2FA setup flow
   const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
@@ -70,9 +70,13 @@ export default function SecuritySettings() {
         const data = await response.json();
 
         setTwoFactorEnabled(data.twoFactorEnabled || false);
-      } catch (error: any) {
-        console.error("Failed to fetch initial security settings:", error);
-        toast(`Failed to load security settings: ${error.message}`);
+      } catch (error: unknown) {
+        let errorMessage = "Failed to fetch initial security settings.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        console.error("Failed to fetch initial security settings:", errorMessage, error);
+        toast.error(errorMessage);
       } finally {
         setIsLoadingInitial(false);
       }
@@ -112,9 +116,13 @@ export default function SecuritySettings() {
 
       setPasswords({ current: "", new: "", confirm: "" });
       toast.success(data.message);
-    } catch (error: any) {
-      console.error("Password update error:", error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      let errorMessage = "Failed to update password.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error("Password update error:", errorMessage, error);
+      toast.error(errorMessage);
     } finally {
       setIsLoadingPassword(false);
     }
@@ -146,9 +154,13 @@ export default function SecuritySettings() {
         setTwoFactorSecret(null);
         setTwoFactorCodeInput("");
         setShowTwoFactorSetupFlow(false);
-      } catch (error: any) {
-        console.error("2FA disable error:", error);
-        toast.error(error.message);
+      } catch (error: unknown) {
+        let errorMessage = "Failed to disable two-factor authentication.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        console.error("2FA disable error:", errorMessage, error);
+        toast.error(errorMessage);
       } finally {
         setIsLoadingTwoFactor(false);
       }
@@ -171,9 +183,13 @@ export default function SecuritySettings() {
           "Scan the QR code with your authenticator app.",
           "info"
         );
-      } catch (error: any) {
-        console.error("2FA generate error:", error);
-        toast.error(error.message);
+      } catch (error: unknown) {
+        let errorMessage = "Failed to generate 2FA secret or QR code.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        console.error("2FA generate error:", errorMessage, error);
+        toast.error(errorMessage);
       } finally {
         setIsLoadingTwoFactor(false);
       }
@@ -213,9 +229,13 @@ export default function SecuritySettings() {
       setTwoFactorSecret(null);
       setTwoFactorCodeInput("");
       setShowTwoFactorSetupFlow(false);
-    } catch (error: any) {
-      console.error("2FA verification error:", error);
-      toast.error(error.message);
+    } catch (error: unknown) {
+      let errorMessage = "Failed to verify 2FA code.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error("2FA verification error:", errorMessage, error);
+      toast.error(errorMessage);
     } finally {
       setIsLoadingTwoFactor(false);
     }
@@ -248,256 +268,214 @@ export default function SecuritySettings() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
+            <label
+              htmlFor="current-password"
+              className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+            >
               Current Password
             </label>
             <div className="relative">
-              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type={showCurrentPassword ? "text" : "password"}
+                id="current-password"
+                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 value={passwords.current}
                 onChange={(e) =>
                   setPasswords({ ...passwords, current: e.target.value })
                 }
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-                placeholder="Enter current password"
                 disabled={isLoadingPassword}
               />
               <button
+                type="button"
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                disabled={isLoadingPassword}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-300 focus:outline-none"
               >
                 {showCurrentPassword ? (
-                  <EyeOff className="w-4 h-4" />
+                  <EyeOff className="h-5 w-5" />
                 ) : (
-                  <Eye className="w-4 h-4" />
+                  <Eye className="h-5 w-5" />
                 )}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
+            <label
+              htmlFor="new-password"
+              className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+            >
               New Password
             </label>
             <div className="relative">
-              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type={showNewPassword ? "text" : "password"}
+                id="new-password"
+                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 value={passwords.new}
                 onChange={(e) =>
                   setPasswords({ ...passwords, new: e.target.value })
                 }
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-                placeholder="Enter new password"
                 disabled={isLoadingPassword}
               />
               <button
+                type="button"
                 onClick={() => setShowNewPassword(!showNewPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                disabled={isLoadingPassword}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-300 focus:outline-none"
               >
                 {showNewPassword ? (
-                  <EyeOff className="w-4 h-4" />
+                  <EyeOff className="h-5 w-5" />
                 ) : (
-                  <Eye className="w-4 h-4" />
+                  <Eye className="h-5 w-5" />
                 )}
               </button>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300">
+            <label
+              htmlFor="confirm-password"
+              className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
+            >
               Confirm New Password
             </label>
             <div className="relative">
-              <Key className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
+                id="confirm-password"
+                className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
                 value={passwords.confirm}
                 onChange={(e) =>
                   setPasswords({ ...passwords, confirm: e.target.value })
                 }
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-                placeholder="Confirm new password"
                 disabled={isLoadingPassword}
               />
               <button
+                type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                disabled={isLoadingPassword}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-300 focus:outline-none"
               >
                 {showConfirmPassword ? (
-                  <EyeOff className="w-4 h-4" />
+                  <EyeOff className="h-5 w-5" />
                 ) : (
-                  <Eye className="w-4 h-4" />
+                  <Eye className="h-5 w-5" />
                 )}
               </button>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-end">
-            <button
-              onClick={handlePasswordChange}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoadingPassword}
-            >
-              {isLoadingPassword ? "Updating..." : "Update Password"}
-            </button>
-          </div>
+        <div className="mt-6 text-right">
+          <button
+            onClick={handlePasswordChange}
+            disabled={isLoadingPassword}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoadingPassword ? "Updating..." : "Update Password"}
+          </button>
         </div>
       </div>
 
+      {/* Two-Factor Authentication */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <Shield className="w-6 h-6 text-green-600 mr-3" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Two-Factor Authentication
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-300">
-                Add an extra layer of security to your account
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={handleTwoFactorToggle}
-            className={`px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-              twoFactorEnabled
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "bg-green-600 text-white hover:bg-green-700"
-            }`}
-            disabled={isLoadingTwoFactor}
-          >
-            {isLoadingTwoFactor
-              ? "Updating..."
-              : twoFactorEnabled
-              ? "Disable"
-              : "Enable"}
-          </button>
+        <div className="flex items-center mb-6">
+          <Shield className="w-6 h-6 text-green-600 mr-3" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Two-Factor Authentication
+          </h3>
         </div>
-
-        <div className="flex items-center p-4 bg-gray-50 rounded-lg dark:bg-gray-700">
-          <Smartphone className="w-5 h-5 text-gray-600 mr-3 dark:text-gray-300" />
+        <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-              {twoFactorEnabled
-                ? "Two-factor authentication is enabled"
-                : "Two-factor authentication is disabled"}
-            </p>
+            <p className="font-medium text-gray-900 dark:text-gray-100">Enable 2FA</p>
             <p className="text-sm text-gray-500 dark:text-gray-300">
-              {twoFactorEnabled
-                ? "Your account is protected with an additional security layer"
-                : "Enable two-factor authentication for enhanced security"}
+              Add an extra layer of security to your account.
             </p>
           </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={twoFactorEnabled}
+              onChange={handleTwoFactorToggle}
+              disabled={isLoadingTwoFactor}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+          </label>
         </div>
 
-        {!twoFactorEnabled && showTwoFactorSetupFlow && qrCodeImage && (
+        {showTwoFactorSetupFlow && twoFactorSecret && qrCodeImage && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-950 dark:border-blue-800"
+            className="mt-6 p-4 border border-blue-200 bg-blue-50 rounded-lg dark:border-blue-700 dark:bg-blue-900/20"
           >
-            <h4 className="text-md font-semibold text-blue-800 mb-3 dark:text-blue-100">
-              Setup Two-Factor Authentication
+            <h4 className="text-md font-semibold text-blue-800 mb-3 dark:text-blue-200">
+              Set up Two-Factor Authentication
             </h4>
             <p className="text-sm text-blue-700 mb-4 dark:text-blue-300">
-              Scan the QR code below with your favorite authenticator app (e.g.,
-              Google Authenticator, Authy). Then, enter the 6-digit code
-              provided by the app to verify.
+              Scan the QR code with your authenticator app (e.g., Google
+              Authenticator, Authy) or manually enter the secret key.
             </p>
-            <div className="flex flex-col items-center justify-center mb-4">
-              <img
-                src={qrCodeImage}
-                alt="2FA QR Code"
-                width={180}
-                height={180}
-                className="rounded-md shadow-md bg-white p-2 dark:bg-gray-900"
-              />
-              <p className="text-xs text-gray-600 mt-2 dark:text-gray-400">
-                If you cannot scan, manually enter this secret key:
+            <div className="flex flex-col items-center space-y-4">
+              <Image src={qrCodeImage} alt="QR Code" width={200} height={200} className="border border-gray-300 p-2 rounded-lg bg-white" />
+              <p className="text-sm font-mono bg-gray-100 p-2 rounded-md dark:bg-gray-700 dark:text-gray-200">
+                Secret Key: {twoFactorSecret}
               </p>
-              <code className="text-xs font-mono bg-gray-100 p-1 rounded break-all dark:bg-gray-700 dark:text-gray-100">
-                {twoFactorSecret}
-              </code>
-            </div>
-
-            <div className="w-full max-w-sm mx-auto">
-              <label
-                htmlFor="2fa-code"
-                className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-300"
-              >
-                Enter 6-digit Code
-              </label>
-              <div className="relative">
-                <input
-                  id="2fa-code"
-                  type="text"
-                  value={twoFactorCodeInput}
-                  onChange={(e) => setTwoFactorCodeInput(e.target.value)}
-                  className="w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-lg font-mono tracking-widest dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-                  placeholder="------"
-                  maxLength={6}
-                  disabled={isLoadingTwoFactor}
-                />
-                <Smartphone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              </div>
+              <input
+                type="text"
+                placeholder="Enter 6-digit code from app"
+                className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg text-center dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                value={twoFactorCodeInput}
+                onChange={(e) => setTwoFactorCodeInput(e.target.value)}
+                maxLength={6}
+              />
               <button
                 onClick={handleVerify2FA}
-                className="mt-4 w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={
-                  isLoadingTwoFactor ||
-                  !twoFactorCodeInput ||
-                  twoFactorCodeInput.length !== 6
-                }
+                disabled={isLoadingTwoFactor}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoadingTwoFactor ? "Verifying..." : "Verify and Enable 2FA"}
+                {isLoadingTwoFactor ? "Verifying..." : "Verify Code"}
               </button>
             </div>
           </motion.div>
         )}
       </div>
 
+      {/* Active Sessions */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
         <div className="flex items-center mb-6">
-          <Smartphone className="w-6 h-6 text-purple-600 mr-3" />
+          <Key className="w-6 h-6 text-purple-600 mr-3" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Active Sessions
           </h3>
         </div>
-
         <div className="space-y-4">
           {activeSessions.map((session) => (
             <div
               key={session.id}
-              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg dark:border-gray-700"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-gray-700"
             >
-              <div className="flex items-center">
-                <div className="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
+              <div className="flex items-center space-x-3">
+                <Smartphone className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <p className="font-medium dark:text-gray-100">
                     {session.device}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-300">
-                    {session.location} • {session.lastActive}
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {session.location} • Last active: {session.lastActive}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center space-x-3">
                 {session.current && (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/20 dark:text-blue-300">
-                    Current
+                  <span className="text-xs font-semibold text-blue-600 bg-blue-100 px-2 py-1 rounded-full dark:bg-blue-900 dark:text-blue-300">
+                    Current Session
                   </span>
                 )}
                 {!session.current && (
                   <button
                     onClick={() => handleRevokeSession(session.id)}
-                    className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-lg hover:bg-red-200 transition-colors dark:bg-red-900/20 dark:text-red-300 dark:hover:bg-red-900/40"
+                    className="text-red-600 hover:text-red-800 text-sm font-medium"
                   >
                     Revoke
                   </button>
@@ -506,6 +484,10 @@ export default function SecuritySettings() {
             </div>
           ))}
         </div>
+        <p className="text-sm text-gray-500 mt-4 dark:text-gray-400">
+          Manage and revoke active sessions for your account. Revoking a session
+          will log out that device immediately.
+        </p>
       </div>
     </div>
   );

@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace NodeJS {
+    interface Global {
+      mongoose: {
+        conn: typeof mongoose | null;
+        promise: Promise<typeof mongoose> | null;
+      };
+    }
+  }
+}
+
 if (!process.env.MONGODB_URI) {
   console.error('Error: MONGODB_URI environment variable is not defined.');
   throw new Error('Please add your Mongo URI to .env.local');
@@ -12,26 +24,26 @@ interface MongooseCache {
   promise: Promise<typeof mongoose> | null;
 }
 
-let cached: MongooseCache = (global as any).mongoose || { conn: null, promise: null };
+const cached: MongooseCache = (global as unknown as NodeJS.Global).mongoose || { conn: null, promise: null };
 
-if (!(global as any).mongoose) {
-  (global as any).mongoose = cached;
+if (!(global as unknown as NodeJS.Global).mongoose) {
+  (global as unknown as NodeJS.Global).mongoose = cached;
 }
 
 export async function connectToDatabase() {
   if (cached.conn) {
-    ('Using existing database connection.');
+    console.log('Using existing database connection.');
     return cached.conn;
   }
 
   if (!cached.promise) {
-    ('Creating new database connection promise...');
+    console.log('Creating new database connection promise...');
     const opts = {
       bufferCommands: false,
     };
 
     cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
-      ('MongoDB connected successfully!');
+      console.log('MongoDB connected successfully!');
       return mongooseInstance;
     }).catch((error) => {
       console.error('MongoDB connection error:', error);
@@ -42,10 +54,14 @@ export async function connectToDatabase() {
 
   try {
     cached.conn = await cached.promise;
-    ('Database connection resolved.');
-  } catch (e: any) {
+    console.log('Database connection resolved.');
+  } catch (e: unknown) {
     cached.promise = null;
-    console.error('Failed to resolve database connection promise:', e);
+    let errorMessage = "Failed to resolve database connection promise.";
+    if (e instanceof Error) {
+      errorMessage = e.message;
+    }
+    console.error(errorMessage, e);
     throw e;
   }
 

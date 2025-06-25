@@ -30,9 +30,17 @@ export default function VideoList() {
       if (response.ok) {
         const data = await response.json();
         setVideos(data);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch videos');
       }
-    } catch (error) {
-      toast.error('Failed to fetch videos');
+    } catch (error: unknown) {
+      let errorMessage = 'Failed to fetch videos';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error('Error fetching videos:', errorMessage, error);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -55,10 +63,16 @@ export default function VideoList() {
         toast.success('Video deleted successfully');
         setVideos(videos.filter(v => v._id !== videoToDelete._id));
       } else {
-        throw new Error('Failed to delete video');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete video');
       }
-    } catch (error) {
-      toast.error('Failed to delete video');
+    } catch (error: unknown) {
+      let errorMessage = 'Failed to delete video';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error('Error deleting video:', errorMessage, error);
+      toast.error(errorMessage);
     } finally {
       setDeleteModalOpen(false);
       setVideoToDelete(null);

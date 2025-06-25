@@ -10,7 +10,7 @@ interface ThemeOption {
   id: string;
   name: string;
   description: string;
-  icon: any;
+  icon: React.ElementType;
   preview: string;
 }
 
@@ -79,15 +79,19 @@ export default function AppearanceSettings() {
         console.log("data", data);
         setSettings(data);
         setTheme(data.theme);
-      } catch (error: any) {
+      } catch (error) {
+        let errorMessage = "Failed to load appearance settings.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
         console.error("Failed to fetch appearance settings:", error);
-        showNotification("Failed to load appearance settings.", "error");
+        showNotification(errorMessage, "error");
       } finally {
         setIsLoading(false);
       }
     };
     fetchSettings();
-  }, []);
+  }, [setTheme, showNotification]);
 
   useEffect(() => {
     if (theme && settings.theme !== theme) {
@@ -114,9 +118,13 @@ export default function AppearanceSettings() {
         throw new Error(data.message || "Failed to update appearance settings");
       }
       showNotification(data.message, "success");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = "Failed to update appearance settings";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       console.error("Appearance update error:", error);
-      showNotification(error.message, "error");
+      showNotification(errorMessage, "error");
     }
   };
 

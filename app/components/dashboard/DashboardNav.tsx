@@ -20,13 +20,21 @@ export default function DashboardNav() {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) throw new Error('Logout failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Logout failed');
+      }
 
       localStorage.removeItem('token');
       showNotification('Logged out successfully', 'success');
       router.push('/login');
-    } catch (error) {
-      showNotification('Error during logout', 'error');
+    } catch (error: unknown) {
+      let errorMessage = "Logout failed.";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error('Logout error:', errorMessage, error);
+      showNotification(errorMessage, 'error'); // Show notification for logout error
     } finally {
       setIsLoggingOut(false);
       setShowLogoutModal(false);

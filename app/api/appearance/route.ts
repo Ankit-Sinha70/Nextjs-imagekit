@@ -37,10 +37,14 @@ export async function GET() {
 
     await new Promise((resolve) => setTimeout(resolve, 500));
     return NextResponse.json(profile?.appearanceSettings);
-  } catch (error) {
-    console.error("Error fetching appearance settings:", error);
+  } catch (error: unknown) {
+    let errorMessage = "Failed to fetch appearance settings.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("Error fetching appearance settings:", errorMessage);
     return NextResponse.json(
-      { message: "Failed to fetch appearance settings." },
+      { message: errorMessage },
       { status: 500 }
     );
   }
@@ -102,9 +106,14 @@ export async function PUT(request: Request) {
       message: "Appearance settings updated successfully!",
       settings: profile?.appearanceSettings,
     });
-  } catch (error) {
+  } catch (error: unknown) {
+    let errorMessage = "Failed to update appearance settings.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error(errorMessage, error);
     return NextResponse.json(
-      { message: "Failed to update appearance settings." },
+      { message: errorMessage },
       { status: 500 }
     );
   }

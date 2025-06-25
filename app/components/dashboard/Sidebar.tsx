@@ -22,7 +22,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false); 
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setIsOpen(window.innerWidth >= 768);
@@ -35,7 +35,7 @@ export default function Sidebar() {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []); 
+  }, []);
 
   return (
     <Fragment>
@@ -46,12 +46,14 @@ export default function Sidebar() {
           transition-all duration-300 ease-in-out
           h-screen fixed top-0 z-40 overflow-hidden /* Mobile positioning */
 
-          ${isOpen ? "left-0 w-56" : "left-[-100%] w-0"} /* Mobile open/close states */
+          ${
+            isOpen ? "left-0 w-56" : "left-[-100%] w-0"
+          } /* Mobile open/close states */
 
           md:relative md:h-auto md:top-auto md:left-auto md:z-auto md:overflow-visible /* Reset mobile positioning for desktop */
           ${isOpen ? "md:w-56" : "md:w-20"} /* Desktop open/close states */
-        `}>
-
+        `}
+      >
         <div className="p-4 pl-4">
           <AnimatePresence mode="wait">
             {isOpen && (
@@ -71,7 +73,7 @@ export default function Sidebar() {
                 href={item.path}
                 className={`flex items-center py-3 text-white/80 hover:bg-white/10 transition-colors duration-200
                 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100
-                ${isOpen ? 'pl-4' : 'pl-2'}
+                ${isOpen ? "pl-4" : "pl-2"}
                 ${
                   isActive
                     ? "bg-white/20 text-white dark:bg-blue-600 dark:text-white"
@@ -93,8 +95,8 @@ export default function Sidebar() {
         className="fixed top-5 bg-white rounded-full p-1 shadow-lg hover:bg-gray-100 transition-colors z-50
         dark:bg-gray-700 dark:hover:bg-gray-600 dark:shadow-none"
         style={{
-          left: isOpen ? 'calc(14rem - 0.75rem)' : '0.5rem',
-          transition: 'left 300ms ease-in-out',
+          left: isOpen ? "calc(14rem - 0.75rem)" : "0.5rem",
+          transition: "left 300ms ease-in-out",
         }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}

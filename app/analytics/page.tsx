@@ -58,10 +58,17 @@ const conversionData = [
   { day: 'Sun', conversions: 20, rate: 3.9 },
 ];
 
+interface StatCardProps {
+  title: string;
+  value: string;
+  change: number;
+  icon: string;
+}
+
 export default function Analytics() {
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
 
-  const StatCard = ({ title, value, change, icon }: any) => (
+  const StatCard = ({ title, value, change, icon }: StatCardProps) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

@@ -6,7 +6,7 @@ import QRCode from "qrcode";
 import { connectToDatabase } from "../../../../lib/db"; 
 import User from "../../../../models/User";
 import Profile from "../../../../models/Profile"; 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     await connectToDatabase(); 
 
@@ -50,10 +50,14 @@ export async function POST(req: Request) {
 
     // We return the secret temporarily; it's saved only upon successful verification in the /verify route.
     return NextResponse.json({ secret, otpauthUrl, qrCodeImage });
-  } catch (error: any) { // Explicitly type error as any for easier access to properties
-    console.error("2FA generate error:", error);
+  } catch (error: unknown) {
+    let errorMessage = "Internal Server Error";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("2FA generate error:", errorMessage);
     // Log the full error object for better debugging on the server
     console.error("Full error details:", JSON.stringify(error, null, 2));
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return new NextResponse(errorMessage, { status: 500 });
   }
 }

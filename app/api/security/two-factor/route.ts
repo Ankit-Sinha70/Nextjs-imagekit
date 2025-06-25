@@ -24,7 +24,7 @@ export async function PUT(request: Request) {
 
     const { enabled } = await request.json();
 
-    let profile: IProfile | null = await Profile.findOneAndUpdate(
+    const profile: IProfile | null = await Profile.findOneAndUpdate(
       { user: user._id },
       { twoFactorEnabled: enabled },
       { new: true, upsert: true }
@@ -44,10 +44,14 @@ export async function PUT(request: Request) {
       message: "Two-factor authentication status updated.",
       twoFactorEnabled: profile.twoFactorEnabled,
     });
-  } catch (error) {
-    console.error("Error updating two-factor status:", error);
+  } catch (error: unknown) {
+    let errorMessage = "Failed to update two-factor status.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("Error updating two-factor status:", errorMessage, error);
     return NextResponse.json(
-      { message: "Failed to update two-factor status." },
+      { message: errorMessage },
       { status: 500 }
     );
   }

@@ -20,7 +20,12 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(user);
-  } catch (error) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  } catch (error: unknown) {
+    let errorMessage = "Unauthorized";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error('Error fetching user profile:', errorMessage, error);
+    return NextResponse.json({ message: errorMessage }, { status: 401 });
   }
 } 

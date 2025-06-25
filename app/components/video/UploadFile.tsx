@@ -13,7 +13,6 @@ interface uploadFileProps {
 
 const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
   const [uploading, setUploading] = useState(false);
-  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
 
   const validateFile = (file: File) => {
     if (filetype === "video") {
@@ -39,7 +38,6 @@ const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
 
     setUploading(true);
     const id = toast.loading("Uploading file...");
-    setLoadingToastId(id);
 
     try {
       const response = await fetch("/api/auth/imagekit-auth");
@@ -68,12 +66,16 @@ const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
         name: uploadResult.name
       });
       toast.success("File uploaded successfully!");
-    } catch (error) {
-      console.error("Upload failed", error);
-      toast.error(error instanceof Error ? error.message : "Upload failed");
+    } catch (error: unknown) {
+      let errorMessage = "Upload failed";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      console.error("Upload failed", errorMessage, error);
+      toast.error(errorMessage);
     } finally {
       setUploading(false);
-      setLoadingToastId(null);
+      toast.dismiss(id);
       e.target.value = '';
     }
   };

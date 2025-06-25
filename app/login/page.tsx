@@ -64,9 +64,15 @@ export default function Login() {
           showNotification(data.message || 'Invalid 2FA code. Please try again.', 'error');
         }
       }
-    } catch (error: any) {
-      console.error('Login error:', error);
-      showNotification(error.message || 'Login failed due to an unexpected error.', 'error');
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred during login.';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      console.error('Login error:', errorMessage, error);
+      showNotification(errorMessage, 'error');
     } finally {
       setIsLoading(false);
     }

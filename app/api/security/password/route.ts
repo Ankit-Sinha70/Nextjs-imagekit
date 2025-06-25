@@ -8,7 +8,6 @@ export async function PUT(request: Request) {
 
   try {
     const {
-      currentPassword: _currentPassword,
       newPassword,
       confirmPassword,
     } = await request.json();
@@ -26,7 +25,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    let profile: IProfile | null = await Profile.findOne({});
+    const profile: IProfile | null = await Profile.findOne({});
 
     if (!profile) {
       return NextResponse.json(
@@ -34,6 +33,7 @@ export async function PUT(request: Request) {
         { status: 404 }
       );
     }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
@@ -43,10 +43,14 @@ export async function PUT(request: Request) {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     return NextResponse.json({ message: "Password updated successfully!" });
-  } catch (error) {
-    console.error("Error updating password:", error);
+  } catch (error: unknown) {
+    let errorMessage = "Failed to update password.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("Error updating password:", errorMessage, error);
     return NextResponse.json(
-      { message: "Failed to update password." },
+      { message: errorMessage },
       { status: 500 }
     );
   }

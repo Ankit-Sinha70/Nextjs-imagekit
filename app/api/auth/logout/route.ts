@@ -2,11 +2,15 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
   try {
-    // You can add any cleanup logic here if needed
     return NextResponse.json({ message: "Logged out successfully" });
-  } catch (error) {
+  } catch (error: unknown) {
+    let errorMessage = "Error during logout";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error(errorMessage, error);
     return NextResponse.json(
-      { message: "Error during logout" },
+      { message: errorMessage },
       { status: 500 }
     );
   }

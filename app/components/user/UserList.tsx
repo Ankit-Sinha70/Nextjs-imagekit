@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Edit, Trash2, Eye } from 'lucide-react';
 import { useNotification } from '../Notification';
 
 interface User {

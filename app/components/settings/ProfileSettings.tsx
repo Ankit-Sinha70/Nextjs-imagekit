@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import Image from "next/image";
 import { User, Mail, Phone, MapPin, Camera } from "lucide-react";
 import { useNotification } from "../Notification";
 import Loader from "../ui/Loader";
@@ -79,8 +79,12 @@ export default function ProfileSettings() {
         const result = await response.json();
 
         setProfile(result);
-      } catch (e: any) {
-        setError("Failed to load profile: " + e.message);
+      } catch (e: unknown) {
+        let errorMessage = "Failed to load profile.";
+        if (e instanceof Error) {
+          errorMessage = e.message;
+        }
+        setError(errorMessage);
         showNotification("Failed to load profile!", "error");
       } finally {
         setIsLoading(false);
@@ -88,7 +92,7 @@ export default function ProfileSettings() {
     };
 
     fetchProfile();
-  }, []);
+  }, [showNotification]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -153,8 +157,12 @@ export default function ProfileSettings() {
       setNewAvatarFile(null);
       setIsEditing(false);
       showNotification("Profile updated successfully!", "success");
-    } catch (e: any) {
-      setError("Failed to save profile: " + e.message);
+    } catch (e: unknown) {
+      let errorMessage = "Failed to save profile.";
+      if (e instanceof Error) {
+        errorMessage = e.message;
+      }
+      setError(errorMessage);
       showNotification("Failed to save profile!", "error");
     } finally {
       setIsLoading(false);
@@ -222,9 +230,11 @@ export default function ProfileSettings() {
           <div className="flex flex-col items-center">
             <div className="relative">
               {profile.avatar ? (
-                <img
+                <Image
                   src={profile.avatar}
                   alt="Profile Avatar"
+                  width={160}
+                  height={160}
                   className="w-40 h-40 rounded-full object-cover mb-4"
                 />
               ) : (

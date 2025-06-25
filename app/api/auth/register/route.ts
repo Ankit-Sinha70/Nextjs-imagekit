@@ -32,9 +32,14 @@ export async function POST(request: NextRequest) {
       { message: "User registered successfully" },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: unknown) {
+    let errorMessage = "Failed to register user";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("Error during user registration:", errorMessage, error);
     return NextResponse.json(
-      { error: "Failed to register user" },
+      { error: errorMessage },
       { status: 400 }
     );
   }

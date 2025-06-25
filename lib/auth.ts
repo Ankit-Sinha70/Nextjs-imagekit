@@ -21,16 +21,12 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          ("Error: Missing email or password.");
           throw new Error("Missing email or password");
         }
 
         try {
           await connectToDatabase();
-          ("Database connected.");
-
           const user = await User.findOne({ email: credentials.email });
-
           if (!user) {
             console.log("Error: No user found with this email.");
             throw new Error("No user found with this email");
@@ -49,20 +45,19 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!isValidPassword) {
-            ("Error: Invalid password.");
+            console.log("Error: Invalid password.");
             throw new Error("Invalid password");
           }
           // Password is correct. Now check for 2FA.
           const profile = await Profile.findOne({ user: user._id });
           if (profile?.twoFactorEnabled && profile?.twoFactorConfirmed) {
-            ("2FA is enabled and confirmed for this user.");
             if (!credentials.twoFactorCode) {
-              ("Error: 2FA enabled but no code provided. Throwing TwoFactorRequired.");
+              console.log("Error: 2FA enabled but no code provided. Throwing TwoFactorRequired.");
               throw new Error("TwoFactorRequired");
             }
 
             if (!profile.twoFactorSecret) {
-              ("Error: 2FA secret missing for enabled account.");
+              console.log("Error: 2FA secret missing for enabled account.");
               throw new Error("2FA secret missing for enabled account.");
             }
 
@@ -82,15 +77,19 @@ export const authOptions: NextAuthOptions = {
             );
           }
           // If no 2FA required, or 2FA successfully verified, return the user
-          ("User successfully authorized. Returning user object.");
+          console.log("User successfully authorized. Returning user object.");
           return {
             id: user._id.toString(),
             email: user.email,
             name: user.name,
           };
-        } catch (error: any) {
-          console.error("Auth error in authorize (caught): ", error.message);
-          throw new Error(error.message || "Authentication failed.");
+        } catch (error: unknown) {
+          let errorMessage = "Authentication failed.";
+          if (error instanceof Error) {
+            errorMessage = error.message;
+          }
+          console.error("Auth error in authorize (caught): ", errorMessage);
+          throw new Error(errorMessage);
         }
       },
     }),

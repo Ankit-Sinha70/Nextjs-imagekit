@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
-import { connectToDatabase } from "../../../lib/db";
-import Profile, { IProfile } from "../../../models/Profile";
-import formidable, { Fields, Files, Part } from "formidable";
+import { authOptions } from "@/lib/auth";
+import formidable from "formidable";
 import fs from "fs/promises";
-import path from "path";
 import { IncomingMessage } from "http";
-import { Readable } from "stream";
 import ImageKit from "imagekit";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { Readable } from "stream";
+import { connectToDatabase } from "../../../lib/db";
+import Profile, { IProfile } from "../../../models/Profile";
 import User from "../../../models/User";
 
 // Configure ImageKit SDK
@@ -17,35 +16,6 @@ const imagekit = new ImageKit({
   privateKey: process.env.NEXT_IMAGEKIT_PRIVATE_KEY!,
   urlEndpoint: process.env.NEXT_PUBLIC_URL_ENDPOINT!,
 });
-
-// Define the shape of the profile data (adjust as per your actual data model)
-interface UserProfile {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  location: string;
-  bio: string;
-  avatar: string;
-}
-
-// Directory to save uploaded files (relative to the project root)
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
-
-// Ensure the upload directory exists
-const ensureUploadDir = async () => {
-  try {
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  } catch (error) {
-    console.error("Failed to create upload directory:", error);
-  }
-};
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 async function streamIncomingMessage(req: Request): Promise<IncomingMessage> {
   const bodyBuffer = await req.arrayBuffer();
@@ -63,18 +33,21 @@ async function streamIncomingMessage(req: Request): Promise<IncomingMessage> {
 }
 
 // GET /api/profile - Fetches the user profile
-export async function GET(req: Request) {
-  ("Attempting to connect to database...");
+export async function GET() {
+  console.log("Attempting to connect to database...");
   try {
     await connectToDatabase();
-    ("Database connected successfully.");
-  } catch (dbError: any) {
-    console.error("Database connection error in GET /api/profile:", dbError);
+    console.log("Database connected successfully.");
+  } catch (dbError: unknown) {
+    let errorMessage = "Database connection failed";
+    if (dbError instanceof Error) {
+      errorMessage = dbError.message;
+    }
+    console.error("Database connection error in GET /api/profile:", errorMessage, dbError);
     return NextResponse.json(
       {
         success: false,
-        message: "Database connection failed",
-        error: dbError.message,
+        message: errorMessage,
       },
       { status: 500 }
     );
@@ -89,15 +62,12 @@ export async function GET(req: Request) {
 
     const userId = session.user.id;
     const userEmail = session.user.email;
-    const userName = session.user.name;
 
-    `Attempting to find profile for user ID: ${userId}, Email: ${userEmail}`;
+    console.log(`Attempting to find profile for user ID: ${userId}, Email: ${userEmail}`);
     let profile: IProfile | null = await Profile.findOne({ user: userId });
 
     if (!profile) {
-      `No profile found for user ID: ${userId}. Attempting to create a default one...`;
-
-      // Fetch user details from User model to populate required profile fields
+      console.log(`No profile found for user ID: ${userId}. Attempting to create a default one...`);
       const userFromDb = await User.findById(userId).select("email name");
       if (!userFromDb) {
         console.error(
@@ -113,7 +83,6 @@ export async function GET(req: Request) {
         );
       }
 
-      // Provide robust fallback values for required fields
       const defaultFirstName =
         userFromDb.name ||
         (userFromDb.email ? userFromDb.email.split("@")[0] : "New");
@@ -152,16 +121,21 @@ export async function GET(req: Request) {
 
     await new Promise((resolve) => setTimeout(resolve, 500));
     return NextResponse.json(profile);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    let errorMessage = "Failed to fetch or create profile";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
     console.error(
       "Error fetching or creating profile in GET /api/profile:",
+      errorMessage,
       error
     );
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch or create profile",
-        error: error.message,
+        message: errorMessage,
+        error: errorMessage,
       },
       { status: 500 }
     );
@@ -178,147 +152,134 @@ export async function PUT(req: Request) {
 
   const mockReq = await streamIncomingMessage(req);
 
-  return new Promise((resolve) => {
-    form.parse(mockReq, async (err, fields, files) => {
-      if (err) {
-        console.error("Error parsing form data:", err);
-        return resolve(
-          NextResponse.json(
-            { message: "Error processing request", error: err.message },
-            { status: 400 }
-          )
-        );
-      }
+  try {
+    const { fields, files } = await new Promise<{ fields: formidable.Fields; files: formidable.Files }>((resolve, reject) => {
+      form.parse(mockReq, (err, fields, files) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve({ fields, files });
+      });
+    });
 
-      // !!! IMPORTANT: Get the user ID from the authenticated session.
-      const session = await getServerSession(authOptions);
-      if (!session || !session.user?.id) {
-        return resolve(new NextResponse("Unauthorized", { status: 401 }));
-      }
-      const userId = session.user.id;
+    // IMPORTANT: Get the user ID from the authenticated session.
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+    const userId = session.user.id;
 
-      const profileIdFromRequest = Array.isArray(fields._id)
-        ? fields._id[0]
-        : null;
-      const currentProfile = await Profile.findOne({ user: userId });
-      if (!currentProfile) {
-        return resolve(
-          NextResponse.json(
-            { success: false, message: "No profile found for logged in user." },
-            { status: 404 }
-          )
-        );
-      }
+    const currentProfile = await Profile.findOne({ user: userId });
+    if (!currentProfile) {
+      return NextResponse.json(
+        { success: false, message: "No profile found for logged in user." },
+        { status: 404 }
+      );
+    }
 
-      const updateData: Partial<IProfile> = {};
+    const updateData: Partial<IProfile> = {};
 
-      for (const key in fields) {
-        if (Array.isArray(fields[key]) && fields[key].length > 0) {
-          const value = fields[key][0];
+    for (const key in fields) {
+      if (Array.isArray(fields[key]) && fields[key].length > 0) {
+        const value = fields[key][0];
+        if (typeof value === 'string') {
           if (
             key === "notificationPreferences" ||
             key === "appearanceSettings"
           ) {
             try {
-              updateData[key as keyof IProfile] = JSON.parse(value as string);
-            } catch (parseError) {
-              console.warn(`Could not parse JSON for ${key}:`, value);
-              updateData[key as keyof IProfile] = value as any;
+              updateData[key as keyof IProfile] = JSON.parse(value);
+            } catch (parseError: unknown) {
+              let warnMessage = `Could not parse JSON for ${key}`;
+              if (parseError instanceof Error) {
+                warnMessage += `: ${parseError.message}`;
+              }
+              console.warn(warnMessage, value);
+              // If JSON parsing fails, we don't update this specific field in updateData
             }
+          } else if (key === "twoFactorEnabled" || key === "twoFactorConfirmed") {
+              updateData[key as keyof IProfile] = value === "true"; // Parse boolean strings
           } else {
             if (key !== "_id" && key !== "user" && key !== "twoFactorSecret") {
-              updateData[key as keyof IProfile] = value as any;
+              updateData[key as keyof IProfile] = value; // Assign directly as string
             }
           }
         }
       }
+    }
 
-      let avatarUrlToSave: string | undefined;
+    let avatarUrlToSave: string | undefined;
 
-      if (files.avatarFile && files.avatarFile.length > 0) {
-        const uploadedFile = files.avatarFile[0];
-        try {
-          const imagekitUploadResponse = await imagekit.upload({
-            file: await fs.readFile(uploadedFile.filepath),
-            fileName: uploadedFile.originalFilename || `avatar_${userId}`,
-            folder: "user_avatars",
-          });
-          avatarUrlToSave = imagekitUploadResponse.url;
-          await fs.unlink(uploadedFile.filepath);
-        } catch (imagekitError: any) {
-          console.error("ImageKit upload error:", imagekitError);
-          try {
-            if (uploadedFile.filepath) await fs.unlink(uploadedFile.filepath);
-          } catch (cleanupError) {
-            console.error("Error cleaning up temp file:", cleanupError);
-          }
-          return resolve(
-            NextResponse.json(
-              {
-                success: false,
-                message: "Failed to upload avatar to ImageKit",
-                error: imagekitError.message,
-              },
-              { status: 500 }
-            )
-          );
-        }
-      } else {
-        avatarUrlToSave = currentProfile?.avatar;
-      }
-
-      updateData.avatar = avatarUrlToSave;
-
+    if (files.avatarFile && files.avatarFile.length > 0) {
+      const uploadedFile = files.avatarFile[0];
       try {
-        const updatedProfile = await Profile.findOneAndUpdate(
-          { user: userId },
-          updateData,
-          {
-            new: true,
-            runValidators: true,
+        const imagekitUploadResponse = await imagekit.upload({
+          file: await fs.readFile(uploadedFile.filepath),
+          fileName: uploadedFile.originalFilename || `avatar_${userId}`,
+          folder: "user_avatars",
+        });
+        avatarUrlToSave = imagekitUploadResponse.url;
+        await fs.unlink(uploadedFile.filepath);
+      } catch (imagekitError: unknown) {
+        let errorMessage = "ImageKit upload error.";
+        if (imagekitError instanceof Error) {
+          errorMessage += `: ${imagekitError.message}`;
+        }
+        console.error(errorMessage, imagekitError);
+        try {
+          if (uploadedFile.filepath) await fs.unlink(uploadedFile.filepath);
+        } catch (cleanupError: unknown) {
+          let cleanupErrorMessage = "Error cleaning up temp file.";
+          if (cleanupError instanceof Error) {
+            cleanupErrorMessage += `: ${cleanupError.message}`;
           }
-        );
-
-        if (!updatedProfile) {
-          return resolve(
-            NextResponse.json(
-              {
-                success: false,
-                message: "Profile not found for update (by user ID)",
-              },
-              { status: 404 }
-            )
-          );
+          console.error(cleanupErrorMessage, cleanupError);
         }
-
-        resolve(
-          NextResponse.json({
-            success: true,
-            message: "Profile updated successfully!",
-            profile: updatedProfile,
-          })
-        );
-      } catch (error: any) {
-        console.error("Error updating profile in DB:", error);
-        if (error.name === "ValidationError") {
-          return resolve(
-            NextResponse.json(
-              { success: false, message: error.message, errors: error.errors },
-              { status: 400 }
-            )
-          );
-        }
-        resolve(
-          NextResponse.json(
-            {
-              success: false,
-              message: "Failed to update profile",
-              error: error.message,
-            },
-            { status: 500 }
-          )
+        return NextResponse.json(
+          { success: false, message: "Failed to upload avatar to ImageKit" },
+          { status: 500 }
         );
       }
+    }
+
+    // If avatarUrlToSave is defined, add it to updateData
+    if (avatarUrlToSave !== undefined) {
+      updateData.avatar = avatarUrlToSave;
+    }
+
+    const updatedProfile = await Profile.findOneAndUpdate(
+      { user: userId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedProfile) {
+      return NextResponse.json(
+        { success: false, message: "Profile not found for update." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Profile updated successfully!",
+      profile: updatedProfile,
     });
-  });
+  } catch (error: unknown) {
+    let errorMessage = "Error processing request.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("Error in PUT /api/profile:", errorMessage, error);
+    return NextResponse.json(
+      { success: false, message: errorMessage },
+      { status: 500 }
+    );
+  }
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

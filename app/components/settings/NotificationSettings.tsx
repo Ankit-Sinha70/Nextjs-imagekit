@@ -15,7 +15,17 @@ interface NotificationSetting {
   inApp: boolean;
 }
 
-const transformApiDataToFrontend = (apiData: any): NotificationSetting[] => {
+// Define the type for the incoming API data
+interface ApiNotificationSettings {
+  [key: string]: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+    inApp: boolean;
+  };
+}
+
+const transformApiDataToFrontend = (apiData: ApiNotificationSettings): NotificationSetting[] => {
   const defaultSettings: NotificationSetting[] = [
     {
       id: "security",
@@ -107,9 +117,13 @@ export default function NotificationSettings() {
         const data = await response.json();
         setSettings(transformApiDataToFrontend(data));
         setHasFetchedInitial(true);
-      } catch (error: any) {
-        console.error("Failed to fetch notification settings:", error);
-        toast.error("Failed to load notification settings.");
+      } catch (error: unknown) {
+        let errorMessage = "Failed to load notification settings.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        console.error("Failed to fetch notification settings:", errorMessage, error);
+        toast.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -147,9 +161,13 @@ export default function NotificationSettings() {
       toast.success(
         successMessage || data.message || "Settings updated successfully."
       );
-    } catch (error: any) {
-      console.error("Notification update error:", error);
-      toast.error(errorMessage || error.message || "Update failed");
+    } catch (error: unknown) {
+      let finalErrorMessage = errorMessage || "Update failed";
+      if (error instanceof Error) {
+        finalErrorMessage = finalErrorMessage || error.message;
+      }
+      console.error("Notification update error:", finalErrorMessage, error);
+      toast.error(finalErrorMessage);
     }
   };
 
@@ -247,12 +265,8 @@ export default function NotificationSettings() {
           <div key={setting.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">
-                  {setting.title}
-                </h4>
-                <p className="text-sm text-gray-500 mt-1 dark:text-gray-300">
-                  {setting.description}
-                </p>
+                <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">{setting.title}</h4>
+                <p className="text-sm text-gray-500 mt-1 dark:text-gray-300">{setting.description}</p>
               </div>
             </div>
 
@@ -265,11 +279,12 @@ export default function NotificationSettings() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    id={`email-${setting.id}`}
                     checked={setting.email}
                     onChange={() => handleToggle(setting.id, "email")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -281,11 +296,12 @@ export default function NotificationSettings() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    id={`push-${setting.id}`}
                     checked={setting.push}
                     onChange={() => handleToggle(setting.id, "push")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -297,11 +313,12 @@ export default function NotificationSettings() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    id={`sms-${setting.id}`}
                     checked={setting.sms}
                     onChange={() => handleToggle(setting.id, "sms")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -313,11 +330,12 @@ export default function NotificationSettings() {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
+                    id={`inApp-${setting.id}`}
                     checked={setting.inApp}
                     onChange={() => handleToggle(setting.id, "inApp")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
             </div>
@@ -332,7 +350,7 @@ export default function NotificationSettings() {
           <div>
             <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">Notification Summary</h4>
             <p className="text-sm text-blue-700 mt-1 dark:text-blue-300">
-              You'll receive notifications through the channels you've enabled above. 
+              You&apos;ll receive notifications through the channels you&apos;ve enabled above. 
               You can change these settings at any time.
             </p>
           </div>

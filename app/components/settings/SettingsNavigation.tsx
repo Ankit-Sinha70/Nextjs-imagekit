@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 interface Section {
   id: string;
   name: string;
-  icon: any;
+  icon: React.ElementType;
 }
 
 interface SettingsNavigationProps {
