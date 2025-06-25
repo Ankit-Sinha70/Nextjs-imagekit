@@ -35,7 +35,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      toast("Logged out successfully");
+      toast("Logged Out Successfully");
       setIsLoggingOut(true);
       setTimeout(async () => {
         await signOut({ callbackUrl: "/login", redirect: true });
