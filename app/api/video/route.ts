@@ -12,7 +12,6 @@ export async function GET() {
     if (!videos || videos.length === 0) {
       return NextResponse.json([], { status: 200 });
     }
-    console.log(videos, ":Videos")
     return NextResponse.json(videos);
   } catch (error) {
     return NextResponse.json(

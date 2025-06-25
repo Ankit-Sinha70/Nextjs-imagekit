@@ -7,7 +7,7 @@ interface LoaderProps {
   message?: string;
 }
 
-export default function Loader({ message }: LoaderProps) {
+export default function Loader({ message="Loading..." }: LoaderProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

@@ -59,7 +59,7 @@ export default function Navbar() {
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-indigo-600 to-purple-700 text-white shadow-xl dark:bg-gray-700 dark:from-gray-700 dark:to-gray-700 dark:text-gray-100">
         <div className="flex justify-between h-16">
           <motion.div className="flex items-center">
-            <h1 className="text-xl font-bold">{getPageTitle()}</h1>
+            <h1 className="ml-7 text-xl font-bold">{getPageTitle()}</h1>
           </motion.div>
           <div className="flex items-center">
             <motion.button
