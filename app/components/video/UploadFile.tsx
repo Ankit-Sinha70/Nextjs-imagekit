@@ -1,7 +1,5 @@
 "use client";
-import {
-  upload,
-} from "@imagekit/next";
+import { upload } from "@imagekit/next";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -32,7 +30,7 @@ const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
     const file = e.target.files?.[0];
 
     if (!file || !validateFile(file)) {
-      e.target.value = '';
+      e.target.value = "";
       return;
     }
 
@@ -63,7 +61,7 @@ const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
       }
       onSuccess({
         url: uploadResult.url,
-        name: uploadResult.name
+        name: uploadResult.name,
       });
       toast.success("File uploaded successfully!");
     } catch (error: unknown) {
@@ -76,7 +74,7 @@ const UploadFile = ({ onSuccess, onProgress, filetype }: uploadFileProps) => {
     } finally {
       setUploading(false);
       toast.dismiss(id);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 

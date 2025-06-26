@@ -82,7 +82,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-950">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-950">
       <div className="max-w-xl w-full space-y-8 p-10 bg-white rounded-2xl shadow-2xl transform transition-all duration-300 hover:scale-[1.02] dark:bg-gray-800 dark:shadow-none dark:hover:shadow-lg dark:hover:shadow-gray-900">
         <div className="animate-fade-in">
           <h2 className="text-center text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-indigo-400">

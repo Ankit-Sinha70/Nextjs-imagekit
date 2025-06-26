@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import Loader from '../ui/Loader';
+import { useState } from "react";
+import { toast } from "sonner";
+import Loader from "../ui/Loader";
 
 export default function VideoUpload() {
   const [isUploading, setIsUploading] = useState(false);
@@ -12,45 +12,45 @@ export default function VideoUpload() {
     if (!file) return;
 
     // Check if file is a video
-    if (!file.type.startsWith('video/')) {
-      toast.error('Please upload a video file');
+    if (!file.type.startsWith("video/")) {
+      toast.error("Please upload a video file");
       return;
     }
 
     // Check file size (e.g., 100MB limit)
     if (file.size > 100 * 1024 * 1024) {
-      toast.error('File size should be less than 100MB');
+      toast.error("File size should be less than 100MB");
       return;
     }
 
     setIsUploading(true);
     const formData = new FormData();
-    formData.append('video', file);
+    formData.append("video", file);
 
     try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
+      const response = await fetch("/api/upload", {
+        method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Video uploaded successfully');
+        toast.success("Video uploaded successfully");
         // Refresh video list
         window.location.reload();
       } else {
-        throw new Error(data.message || 'Upload failed');
+        throw new Error(data.message || "Upload failed");
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
       toast.error(
-        error instanceof Error ? error.message : 'Failed to upload video'
+        error instanceof Error ? error.message : "Failed to upload video"
       );
     } finally {
       setIsUploading(false);
       // Clear the file input
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -72,8 +72,11 @@ export default function VideoUpload() {
         />
       </label>
       {isUploading && (
-        <div className="mt-2 text-sm text-gray-500"> <Loader message='Uploading Video...'/></div>
+        <div className="mt-2 text-sm text-gray-500">
+          {" "}
+          <Loader message="Uploading Video..." />
+        </div>
       )}
     </div>
   );
-} 
+}

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import ConfirmationModal from '../models/ConfirmationModal';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from "@/components/ui/button"
-import { toast } from 'sonner';
-import Loader from '../ui/Loader';
+import { useState, useEffect } from "react";
+import ConfirmationModal from "../models/ConfirmationModal";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import Loader from "../ui/Loader";
 
 interface Video {
   _id: string;
@@ -26,20 +26,20 @@ export default function VideoList() {
 
   const fetchVideos = async () => {
     try {
-      const response = await fetch('/api/video');
+      const response = await fetch("/api/video");
       if (response.ok) {
         const data = await response.json();
         setVideos(data);
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch videos');
+        throw new Error(errorData.message || "Failed to fetch videos");
       }
     } catch (error: unknown) {
-      let errorMessage = 'Failed to fetch videos';
+      let errorMessage = "Failed to fetch videos";
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      console.error('Error fetching videos:', errorMessage, error);
+      console.error("Error fetching videos:", errorMessage, error);
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -56,22 +56,22 @@ export default function VideoList() {
 
     try {
       const response = await fetch(`/api/videos/${videoToDelete._id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        toast.success('Video deleted successfully');
-        setVideos(videos.filter(v => v._id !== videoToDelete._id));
+        toast.success("Video deleted successfully");
+        setVideos(videos.filter((v) => v._id !== videoToDelete._id));
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete video');
+        throw new Error(errorData.message || "Failed to delete video");
       }
     } catch (error: unknown) {
-      let errorMessage = 'Failed to delete video';
+      let errorMessage = "Failed to delete video";
       if (error instanceof Error) {
         errorMessage = error.message;
       }
-      console.error('Error deleting video:', errorMessage, error);
+      console.error("Error deleting video:", errorMessage, error);
       toast.error(errorMessage);
     } finally {
       setDeleteModalOpen(false);
@@ -106,7 +106,9 @@ export default function VideoList() {
                 src={video.url}
               />
               <div className="p-4">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{video.title}</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                  {video.title}
+                </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-300">
                   {new Date(video.createdAt).toLocaleDateString()}
                 </p>
@@ -134,4 +136,4 @@ export default function VideoList() {
       />
     </>
   );
-} 
+}
