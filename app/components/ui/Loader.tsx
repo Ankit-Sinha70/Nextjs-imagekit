@@ -7,7 +7,7 @@ interface LoaderProps {
   message?: string;
 }
 
-export default function Loader({ message="Loading..." }: LoaderProps) {
+export default function Loader({ message = "Loading..." }: LoaderProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -19,4 +19,4 @@ export default function Loader({ message="Loading..." }: LoaderProps) {
       <span className="text-lg font-medium">{message}</span>
     </motion.div>
   );
-} 
+}

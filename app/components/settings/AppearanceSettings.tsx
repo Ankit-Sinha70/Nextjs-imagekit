@@ -165,7 +165,7 @@ export default function AppearanceSettings() {
   if (isLoading) {
     return (
       <div className="rounded-lg shadow-sm border border-gray-100 p-6 text-center text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
-        <Loader/>
+        <Loader />
       </div>
     );
   }

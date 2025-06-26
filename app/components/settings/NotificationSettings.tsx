@@ -25,7 +25,9 @@ interface ApiNotificationSettings {
   };
 }
 
-const transformApiDataToFrontend = (apiData: ApiNotificationSettings): NotificationSetting[] => {
+const transformApiDataToFrontend = (
+  apiData: ApiNotificationSettings
+): NotificationSetting[] => {
   const defaultSettings: NotificationSetting[] = [
     {
       id: "security",
@@ -67,7 +69,7 @@ const transformApiDataToFrontend = (apiData: ApiNotificationSettings): Notificat
 
   if (!apiData) return defaultSettings;
 
-  return defaultSettings.map(defaultSetting => {
+  return defaultSettings.map((defaultSetting) => {
     const apiSetting = apiData[defaultSetting.id];
     return {
       ...defaultSetting,
@@ -80,9 +82,25 @@ const transformApiDataToFrontend = (apiData: ApiNotificationSettings): Notificat
 };
 
 // Helper function to transform frontend state to API data format
-const transformFrontendDataToApi = (frontendData: NotificationSetting[]): { [key: string]: { email: boolean, push: boolean, sms: boolean, inApp: boolean } } => {
-  const apiData: { [key: string]: { email: boolean, push: boolean, sms: boolean, inApp: boolean } } = {};
-  frontendData.forEach(setting => {
+const transformFrontendDataToApi = (
+  frontendData: NotificationSetting[]
+): {
+  [key: string]: {
+    email: boolean;
+    push: boolean;
+    sms: boolean;
+    inApp: boolean;
+  };
+} => {
+  const apiData: {
+    [key: string]: {
+      email: boolean;
+      push: boolean;
+      sms: boolean;
+      inApp: boolean;
+    };
+  } = {};
+  frontendData.forEach((setting) => {
     apiData[setting.id] = {
       email: setting.email,
       push: setting.push,
@@ -122,7 +140,11 @@ export default function NotificationSettings() {
         if (error instanceof Error) {
           errorMessage = error.message;
         }
-        console.error("Failed to fetch notification settings:", errorMessage, error);
+        console.error(
+          "Failed to fetch notification settings:",
+          errorMessage,
+          error
+        );
         toast.error(errorMessage);
       } finally {
         setIsLoading(false);
@@ -205,7 +227,7 @@ export default function NotificationSettings() {
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
-         <Loader />
+        <Loader />
       </div>
     );
   }
@@ -217,7 +239,9 @@ export default function NotificationSettings() {
         <div className="flex items-center">
           <Bell className="w-6 h-6 text-blue-600 mr-3" />
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-300">Manage how you receive notifications</p>
+            <p className="text-sm text-gray-500 dark:text-gray-300">
+              Manage how you receive notifications
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -238,7 +262,9 @@ export default function NotificationSettings() {
 
       {/* Notification Channels */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
-        <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-gray-100">Notification Channels</h4>
+        <h4 className="text-md font-semibold text-gray-900 mb-4 dark:text-gray-100">
+          Notification Channels
+        </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center p-3 border border-gray-200 rounded-lg dark:border-gray-700">
             <Mail className="w-5 h-5 text-blue-600 mr-2" />
@@ -262,11 +288,18 @@ export default function NotificationSettings() {
       {/* Notification Settings */}
       <div className="space-y-4">
         {settings.map((setting) => (
-          <div key={setting.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700">
+          <div
+            key={setting.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700"
+          >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">{setting.title}</h4>
-                <p className="text-sm text-gray-500 mt-1 dark:text-gray-300">{setting.description}</p>
+                <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">
+                  {setting.title}
+                </h4>
+                <p className="text-sm text-gray-500 mt-1 dark:text-gray-300">
+                  {setting.description}
+                </p>
               </div>
             </div>
 
@@ -284,7 +317,7 @@ export default function NotificationSettings() {
                     onChange={() => handleToggle(setting.id, "email")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -301,7 +334,7 @@ export default function NotificationSettings() {
                     onChange={() => handleToggle(setting.id, "push")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -318,7 +351,7 @@ export default function NotificationSettings() {
                     onChange={() => handleToggle(setting.id, "sms")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
 
@@ -335,7 +368,7 @@ export default function NotificationSettings() {
                     onChange={() => handleToggle(setting.id, "inApp")}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[&apos;&apos;] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 dark:after:bg-gray-200 dark:peer-checked:bg-blue-500"></div>
                 </label>
               </div>
             </div>
@@ -348,10 +381,12 @@ export default function NotificationSettings() {
         <div className="flex items-start">
           <MessageSquare className="w-5 h-5 text-blue-600 mr-3 mt-0.5" />
           <div>
-            <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">Notification Summary</h4>
+            <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              Notification Summary
+            </h4>
             <p className="text-sm text-blue-700 mt-1 dark:text-blue-300">
-              You&apos;ll receive notifications through the channels you&apos;ve enabled above. 
-              You can change these settings at any time.
+              You&apos;ll receive notifications through the channels you&apos;ve
+              enabled above. You can change these settings at any time.
             </p>
           </div>
         </div>

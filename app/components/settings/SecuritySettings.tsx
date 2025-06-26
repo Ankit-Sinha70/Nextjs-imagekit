@@ -75,7 +75,11 @@ export default function SecuritySettings() {
         if (error instanceof Error) {
           errorMessage = error.message;
         }
-        console.error("Failed to fetch initial security settings:", errorMessage, error);
+        console.error(
+          "Failed to fetch initial security settings:",
+          errorMessage,
+          error
+        );
         toast.error(errorMessage);
       } finally {
         setIsLoadingInitial(false);
@@ -251,7 +255,7 @@ export default function SecuritySettings() {
   if (isLoadingInitial) {
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center text-gray-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300">
-        <Loader/>
+        <Loader />
       </div>
     );
   }
@@ -385,7 +389,9 @@ export default function SecuritySettings() {
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-medium text-gray-900 dark:text-gray-100">Enable 2FA</p>
+            <p className="font-medium text-gray-900 dark:text-gray-100">
+              Enable 2FA
+            </p>
             <p className="text-sm text-gray-500 dark:text-gray-300">
               Add an extra layer of security to your account.
             </p>
@@ -417,7 +423,13 @@ export default function SecuritySettings() {
               Authenticator, Authy) or manually enter the secret key.
             </p>
             <div className="flex flex-col items-center space-y-4">
-              <Image src={qrCodeImage} alt="QR Code" width={200} height={200} className="border border-gray-300 p-2 rounded-lg bg-white" />
+              <Image
+                src={qrCodeImage}
+                alt="QR Code"
+                width={200}
+                height={200}
+                className="border border-gray-300 p-2 rounded-lg bg-white"
+              />
               <p className="text-sm font-mono bg-gray-100 p-2 rounded-md dark:bg-gray-700 dark:text-gray-200">
                 Secret Key: {twoFactorSecret}
               </p>

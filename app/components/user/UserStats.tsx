@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Users, UserPlus, UserCheck, UserX } from "lucide-react";
 
 interface UserStatsData {
   totalUsers: number;
@@ -16,42 +16,42 @@ export default function UserStats() {
     totalUsers: 1247,
     newUsers: 89,
     activeUsers: 892,
-    inactiveUsers: 355
+    inactiveUsers: 355,
   };
 
   const statCards = [
     {
-      title: 'Total Users',
+      title: "Total Users",
       value: stats.totalUsers.toLocaleString(),
       icon: Users,
-      change: '+12%',
-      trend: 'up' as const,
-      color: 'blue'
+      change: "+12%",
+      trend: "up" as const,
+      color: "blue",
     },
     {
-      title: 'New Users',
+      title: "New Users",
       value: stats.newUsers.toString(),
       icon: UserPlus,
-      change: '+8%',
-      trend: 'up' as const,
-      color: 'green'
+      change: "+8%",
+      trend: "up" as const,
+      color: "green",
     },
     {
-      title: 'Active Users',
+      title: "Active Users",
       value: stats.activeUsers.toLocaleString(),
       icon: UserCheck,
-      change: '+5%',
-      trend: 'up' as const,
-      color: 'purple'
+      change: "+5%",
+      trend: "up" as const,
+      color: "purple",
     },
     {
-      title: 'Inactive Users',
+      title: "Inactive Users",
       value: stats.inactiveUsers.toString(),
       icon: UserX,
-      change: '-3%',
-      trend: 'down' as const,
-      color: 'red'
-    }
+      change: "-3%",
+      trend: "down" as const,
+      color: "red",
+    },
   ];
 
   return (
@@ -62,9 +62,10 @@ export default function UserStats() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: index * 0.1 }}
-          whileHover={{ 
+          whileHover={{
             scale: 1.02,
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            boxShadow:
+              "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
           }}
           className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300
                      border border-gray-100 hover:border-gray-200
@@ -72,18 +73,30 @@ export default function UserStats() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.title}</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1 dark:text-gray-100">{stat.value}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                {stat.title}
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1 dark:text-gray-100">
+                {stat.value}
+              </p>
             </div>
-            <div className={`p-3 bg-gradient-to-br from-${stat.color}-50 to-${stat.color}-100 rounded-full
-                         dark:from-${stat.color}-900/40 dark:to-${stat.color}-900/60`}>
-              <stat.icon className={`w-6 h-6 text-${stat.color}-600 dark:text-${stat.color}-400`} />
+            <div
+              className={`p-3 bg-gradient-to-br from-${stat.color}-50 to-${stat.color}-100 rounded-full
+                         dark:from-${stat.color}-900/40 dark:to-${stat.color}-900/60`}
+            >
+              <stat.icon
+                className={`w-6 h-6 text-${stat.color}-600 dark:text-${stat.color}-400`}
+              />
             </div>
           </div>
           <div className="mt-4 flex items-center">
-            <span className={`text-sm font-medium ${
-              stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                stat.trend === "up"
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}
+            >
               {stat.change}
             </span>
           </div>
@@ -91,4 +104,4 @@ export default function UserStats() {
       ))}
     </div>
   );
-} 
+}
